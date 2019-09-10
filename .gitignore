@@ -1,0 +1,8 @@
+/cmdman.phar
+/composer.phar
+/vendor/
+/.buildpath
+/.project
+/.settings/
+
+/test.php

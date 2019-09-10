@@ -1,0 +1,13 @@
+{
+	"name" : "tokushima/tt-pdf",
+	"autoload" : {
+		"psr-4" : {
+			"tt\\" : "lib/tt/"
+		}
+	},
+	"require" : {
+		"tokushima/ebi" : ">=2.2.5",
+		"setasign/fpdi": "^2.2",
+		"tecnickcom/tcpdf": "^6.2"
+	}
+}
