@@ -7,7 +7,6 @@
 	},
 	"require" : {
 		"tokushima/ebi" : ">=3.0.5",
-		"setasign/fpdi": "^2.2",
-		"tecnickcom/tcpdf": "^6.2"
+		 "setasign/fpdi-tcpdf": "^2.0"
 	}
 }
