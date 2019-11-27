@@ -2,7 +2,7 @@
 namespace tt\pdf;
 
 class PdfSpliter{
-	private $page_no;
+	private $page;
 	private $width;
 	private $height;
 	
@@ -11,8 +11,8 @@ class PdfSpliter{
 	 * ページ番号
 	 * @return integer
 	 */
-	public function page_no(){
-		return $this->page_no;
+	public function page(){
+		return $this->page;
 	}
 	
 	/**
@@ -32,12 +32,13 @@ class PdfSpliter{
 	}
 	
 	/**
-	 * ページ数を取得
+	 * 総ページ数を取得
 	 * @param string $pdffile
 	 * @return integer
 	 */
-	public static function get_page_count($pdffile){
+	public static function get_num_pages($pdffile){
 		$pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
+		
 		try{
 			return $pdf->setSourceFile($pdffile);
 		}catch(\setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException $e){
@@ -59,25 +60,29 @@ class PdfSpliter{
 	 * @throws \ebi\exception\AccessDeniedException
 	 */
 	public static function split($pdffile,$start=1,$end=null,$pdfversion=null){
-		$page_cnt = self::get_page_count($pdffile);
+		$num_pages = self::get_num_pages($pdffile);
 		
 		if(empty($start)){
 			$start = 1;
 		}
-		if(empty($end) || $page_cnt < $end){
-			$end = $page_cnt;
+		if(empty($end) || $num_pages < $end){
+			$end = $num_pages;
 		}
-		for($page_no=$start;$page_no<=$end;$page_no++){
+		for($page=$start;$page<=$end;$page++){
 			$self = new self();
 			$self->pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
 			$self->pdf->setSourceFile($pdffile);
 			
-			$template_id = $self->pdf->importPage($page_no);
+			$template_id = $self->pdf->importPage($page);
 			$info = $self->pdf->getImportedPageSize($template_id);
 			
-			$self->page_no = $page_no;
+			$self->page = $page;
 			$self->width = $info['width'];
 			$self->height = $info['height'];
+			
+			// 境界線を出さない
+			$self->pdf->setPrintHeader(false);
+			$self->pdf->setPrintFooter(false);
 			
 			$self->pdf->AddPage($info['orientation'],[$self->width,$self->height]);
 			$self->pdf->useTemplate($template_id);
