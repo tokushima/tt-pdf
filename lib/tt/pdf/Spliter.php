@@ -1,7 +1,7 @@
 <?php
 namespace tt\pdf;
 
-class PdfSpliter{
+class Spliter extends \tt\pdf\Pdf{
 	private $page;
 	private $width;
 	private $height;
@@ -69,8 +69,7 @@ class PdfSpliter{
 			$end = $num_pages;
 		}
 		for($page=$start;$page<=$end;$page++){
-			$self = new self();
-			$self->pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
+			$self = new static();
 			$self->pdf->setSourceFile($pdffile);
 			
 			$template_id = $self->pdf->importPage($page);
@@ -80,10 +79,6 @@ class PdfSpliter{
 			$self->width = $info['width'];
 			$self->height = $info['height'];
 			
-			// 境界線を出さない
-			$self->pdf->setPrintHeader(false);
-			$self->pdf->setPrintFooter(false);
-			
 			$self->pdf->AddPage($info['orientation'],[$self->width,$self->height]);
 			$self->pdf->useTemplate($template_id);
 			
@@ -92,37 +87,5 @@ class PdfSpliter{
 			}
 			yield $self;
 		}
-	}
-	
-	/**
-	 * ファイルに書き出す
-	 * @param string $filename
-	 */
-	public function write($filename){
-		\ebi\Util::mkdir(dirname($filename));
-		
-		$this->pdf->Output($filename,'F');
-	}
-	
-	/**
-	 * 出力
-	 * @param string $filename
-	 */
-	public function output($filename=null){
-		if(empty($filename)){
-			$filename = date('Ymd_his').'.pdf';
-		}
-		$this->pdf->Output($filename,'I');
-	}
-	
-	/**
-	 * ダウンロード
-	 * @param string $filename
-	 */
-	public function download($filename=null){
-		if(empty($filename)){
-			$filename = date('Ymd_his').'.pdf';
-		}
-		$this->pdf->Output($filename,'D');
 	}
 }
