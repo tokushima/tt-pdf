@@ -61,4 +61,11 @@ class Pdf{
 		
 		$this->after();
 	}
+	
+	/**
+	 * PDFバージョンを設定する
+	 */
+	public function version($version){
+		$this->pdf->setPDFVersion($version);
+	}
 }

@@ -56,7 +56,6 @@ class Spliter extends \tt\pdf\Pdf{
 	 * @param string $pdffile
 	 * @param integer $start start page
 	 * @param integer $end end page
-	 * @param number $pdfversion PDF version
 	 * @throws \ebi\exception\AccessDeniedException
 	 */
 	public static function split($pdffile,$start=1,$end=null,$pdfversion=null){
@@ -82,9 +81,6 @@ class Spliter extends \tt\pdf\Pdf{
 			$self->pdf->AddPage($info['orientation'],[$self->width,$self->height]);
 			$self->pdf->useTemplate($template_id);
 			
-			if(!empty($pdfversion)){
-				$self->pdf->setPDFVersion($pdfversion);
-			}
 			yield $self;
 		}
 	}
