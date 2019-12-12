@@ -64,8 +64,12 @@ class Pdf{
 	
 	/**
 	 * PDFバージョンを設定する
+	 * 
+	 * @param number $version
+	 * @return \tt\pdf\Pdf
 	 */
 	public function version($version){
 		$this->pdf->setPDFVersion($version);
+		return $this;
 	}
 }
