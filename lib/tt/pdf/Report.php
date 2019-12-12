@@ -91,7 +91,7 @@ class Report extends \tt\pdf\Pdf{
 		
 		$this->line(0, 0, 0, 5);
 		for($mm=0;$mm<=$w;$mm+=1){
-			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0 ) ? 3 : 1);
+			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0) ? 3 : 1);
 			$this->line($mm, 0, $mm, $l);
 		}
 		for($mm=0;$mm<=$h;$mm+=1){
@@ -109,11 +109,11 @@ class Report extends \tt\pdf\Pdf{
 	 * @param string $text
 	 * @param number $size
 	 * @param string $style B: bold, I: italic, U: underline, D: line through, O: overline
-	 * @param string $border L: left, T: top, R: right, B: bottom
 	 * @param string $align L: left, C: center, R: right align, J: justify
+	 * @param string $border L: left, T: top, R: right, B: bottom
 	 * @param number $bordersize mm
 	 */
-	public function textbox($x,$y,$width,$height,$text,$size='',$style='',$border=0,$align='C',$bordersize=0.2){
+	public function textbox($x,$y,$width,$height,$text,$size='',$style='',$align='C',$border=0,$bordersize=0.2){
 		list($x,$y) = $this->xy($x,$y);
 		list($width,$height) = $this->xy($width,$height,$x,$y);
 		
@@ -166,30 +166,11 @@ class Report extends \tt\pdf\Pdf{
 		$this->pdf->SetLineStyle(['width'=>0.2,'color'=>[0,0,0]]);
 	}
 	
-	public function test(){
-		$statement = [
-			['カレンダー スタンダードA',1000,10],
-			['フォトブック　エレガント',1000,10],
-			['ポストカード　シンプル',1000,10],
-		];
-		$this->pdf->SetXY(0,70);
-		$this->pdf->SetFont('kozgopromedium','B', 11);
-		$this->pdf->setCellPaddings(2,1,2,1);
-		$this->pdf->Cell(150, 0,'注文商品',0,0,'L');
-		
-		$this->pdf->SetFont('kozgopromedium','B', 11);
-		$this->pdf->setCellPaddings(2,1,2,1);
-		$this->pdf->Cell(50, 0,'価格',0,1,'R');
-		
-		
-		foreach($statement as $item){
-			$this->pdf->SetFont('kozgopromedium','', 11);
-			$this->pdf->setCellPaddings(2,1,2,1);
-			$this->pdf->Cell(150, 0,number_format($item[2]).'点　'.$item[0],0,0,'L');
-		
-			$this->pdf->SetFont('kozgopromedium','', 11);
-			$this->pdf->setCellPaddings(2,1,2,1);
-			$this->pdf->Cell(50, 0,'¥'.number_format($item[1] * $item[2]),0,1,'R');
-		}
+	/**
+	 *  最後のテキストの高さ
+	 * @return number mm
+	 */
+	public function last_text_height(){
+		return $this->pdf->getLastH();
 	}
 }
