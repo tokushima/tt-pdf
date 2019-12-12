@@ -81,6 +81,9 @@ class Spliter extends \tt\pdf\Pdf{
 			$self->pdf->AddPage($info['orientation'],[$self->width,$self->height]);
 			$self->pdf->useTemplate($template_id);
 			
+			if(!empty($pdfversion)){
+				$self->pdf->setPDFVersion($pdfversion);
+			}
 			yield $self;
 		}
 	}
