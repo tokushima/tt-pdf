@@ -170,16 +170,16 @@
         },
         {
             "name": "tokushima/ebi",
-            "version": "3.0.5",
+            "version": "3.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tokushima/ebi.git",
-                "reference": "cba26fe5b4b4f8472a0aa1f752249da21a9741be"
+                "reference": "0aefb0da4424ac08e8cfa45e31e5e1e81eda53ef"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tokushima/ebi/zipball/cba26fe5b4b4f8472a0aa1f752249da21a9741be",
-                "reference": "cba26fe5b4b4f8472a0aa1f752249da21a9741be",
+                "url": "https://api.github.com/repos/tokushima/ebi/zipball/0aefb0da4424ac08e8cfa45e31e5e1e81eda53ef",
+                "reference": "0aefb0da4424ac08e8cfa45e31e5e1e81eda53ef",
                 "shasum": ""
             },
             "require": {
@@ -204,7 +204,7 @@
                     "name": "tokushima"
                 }
             ],
-            "time": "2019-10-10T11:58:27+00:00"
+            "time": "2019-12-08T15:12:26+00:00"
         }
     ],
     "packages-dev": [],

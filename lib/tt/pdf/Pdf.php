@@ -3,33 +3,236 @@ namespace tt\pdf;
 
 class Pdf{
 	protected $pdf;
+	private $work;
 	
-	public function __construct(){
+	public function __construct($width,$height){
+		$mb_internal_encoding = mb_internal_encoding();
 		$this->pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
 		
-		// 境界線を出さない
 		$this->pdf->setPrintHeader(false);
 		$this->pdf->setPrintFooter(false);
-	}	
+		$this->pdf->SetMargins(0,0,0);
+		$this->pdf->AddPage(($width > $height) ? 'L' : 'P',[$width,$height]);
+		
+		$this->work = new \setasign\Fpdi\Tcpdf\Fpdi();
+		$this->work->setPrintHeader(false);
+		$this->work->setPrintFooter(false);
+		$this->work->SetMargins(0,0,0);
+		
+		mb_internal_encoding($mb_internal_encoding);
+	}
 	
-	protected function before(){
+	/**
+	 * 画像を追加
+	 * @param number $x mm
+	 * @param number $y mm
+	 * @param number $dpi
+	 * @param string $img
+	 * @throws \ebi\exception\ImageException
+	 */
+	public function add_image($x,$y,$dpi,$img){
+		list($x,$y) = $this->xy($x,$y);
+		
+		$info = \ebi\Image::get_info($img);
+		$width = ($info['width'] / $dpi * 25.4);
+		$height = ($info['height'] / $dpi * 25.4);
+		
+		if($info['mime'] !== 'image/jpeg' && $info['mime'] !== 'image/png'){
+			throw new \ebi\exception\ImageException('image not supported');
+		}
+		$this->pdf->Image($img,$x,$y,$width,$height,'','','',true);
 	}
-	protected function after(){
+	
+	/**
+	 *
+	 * @param number $x
+	 * @param number $y
+	 * @param number $width
+	 * @param number $height
+	 * @param string $img
+	 */
+	public function add_svg($x,$y,$width,$height,$img){
+		list($x,$y) = $this->xy($x,$y);
+		
+		$this->pdf->ImageSVG($img,$x,$y,$width,$height,'','','',0,false);
 	}
+	
+	/**
+	 * 線
+	 * @param number $sx mm
+	 * @param number $sy mm
+	 * @param number $ex mm
+	 * @param number $ey mm
+	 * @param number $bordersize mm
+	 */
+	public function add_line($sx,$sy,$ex,$ey,$bordersize=0.2){
+		list($sx,$sy) = $this->xy($sx,$sy);
+		list($ex,$ey) = $this->xy($ex,$ey);
+		
+		$this->pdf->SetLineWidth($bordersize);
+		$this->pdf->Line($sx,$sy,$ex,$ey);
+		$this->pdf->SetLineStyle(['width'=>0.2,'color'=>[0,0,0]]);
+	}
+	
+	/**
+	 * ルーラーの表示
+	 */
+	public function ruler(){
+		$w = $this->pdf->getPageWidth();
+		$h = $this->pdf->getPageHeight();
+		
+		$this->add_line(0, 0, 0, 5);
+		for($mm=0;$mm<=$w;$mm+=1){
+			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0) ? 3 : 1);
+			$this->add_line($mm, 0, $mm, $l);
+		}
+		for($mm=0;$mm<=$h;$mm+=1){
+			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0 ) ? 3 : 1);
+			$this->add_line(0, $mm, $l, $mm);
+		}
+	}
+	
+	/**
+	 * PDFを追加
+	 * @param number $x mm
+	 * @param number $y mm
+	 * @param string $file
+	 * @throws \ebi\exception\AccessDeniedException
+	 */
+	public function add_pdf($x,$y,$file){
+		if(!is_file($file)){
+			throw new \ebi\exception\AccessDeniedException($file.' not found');
+		}
+		$this->pdf->setSourceFile($file);
+		$this->pdf->useTemplate($this->pdf->importPage(1),$x,$y);
+	}
+	
+	
+	
+	private function xy($x,$y,$dx=0,$dy=0){
+		if($x < 0){
+			$x = $this->pdf->getPageWidth() + $x - $dx;
+		}
+		if($y < 0){
+			$y = $this->pdf->getPageHeight() + $y - $dy;
+		}
+		return [$x,$y];
+	}
+	
+	
+	public function add_font(){
+		
+	}
+	
+	/**
+	 * テキストボックス
+	 * @param number $x mm
+	 * @param number $y mm
+	 * @param number $width
+	 * @param number $height
+	 * @param string $text
+	 */
+	public function add_textbox($x,$y,$width,$height,$text,$opt=[]){
+		list($x,$y) = $this->xy($x,$y);
+		list($width,$height) = $this->xy($width,$height,$x,$y);
+		$this->work->AddPage(($width > $height) ? 'L' : 'P',[$width,$height]);
+		
+		$align = $opt['align'] ?? 0;
+		$valign = $opt['valign'] ?? 0;
+		$font_name = $opt['font_name'] ?? 'kozminproregular';
+		$font_size = $opt['font_size'] ?? 8;
+		$color = $opt['color'] ?? '#000000';
+		$text_spacing = $opt['text_spacing'] ?? 0;
+		$text_leading = $opt['text_leading'] ?? 0;
+		$angle = $opt['rotate'] ?? 0;
+		$style = '';
+		
+		list($r,$g,$b) = [hexdec(substr($color,1,2)),hexdec(substr($color,3,2)),hexdec(substr($color,5,2))];
+		$this->pdf->SetFont($font_name,'',$font_size);
+		$this->pdf->SetTextColor($r,$g,$b);
+		$this->pdf->SetFontSpacing($text_spacing);
+		$this->work->SetFontSpacing($text_spacing);
+		
+		if($angle !== 0){
+			$this->pdf->StartTransform();
+			$this->pdf->Rotate($angle,0,0);
+		}
+		
+		$text_h = 0;
+		$lines = [];
+		foreach(explode(PHP_EOL,$text) as $line){
+			$next = '';
+			
+			while(true){
+				$w = $this->pdf->GetStringWidth($line,$font_name,$style,$font_size);
+				
+				if($w >= $width){
+					$next = mb_substr($line,-1).$next;
+					$line = mb_substr($line,0,-1);
+				}else{
+					$this->work->Cell(0,0,$line);
+					$h = $this->work->getLastH() + $text_leading;
+					
+					if($text_h + $h > $height){
+						break;
+					}
+					$lines[] = [$line,$w,$h];
+					$text_h += $h;
+					
+					if(empty($next)){
+						break;
+					}
+					$line = $next;
+					$next = '';
+				}
+			}
+			if(!empty($next)){
+				$this->work->Cell(0,0,$next);
+				$h = $this->work->getLastH() + $text_leading;
+				$w = $this->pdf->GetStringWidth($next,$font_name,$style,$font_size);
+				
+				if($text_h + $h > $height){
+					break;
+				}
+				$lines[] = [$next,$w,$h];
+				$text_h += $h;
+			}
+		}
+		
+		$ly = 0;
+		if($valign === 1){
+			$ly = ($height - $text_h) / 2;
+		}else if($valign === 2){
+			$ly = ($height - $text_h);
+		}
+		while(!empty($lines)){
+			list($text,$w,$h) = array_shift($lines);
+			
+			$lx = 0;
+			if($align === 1){
+				$lx = ($width - $w) / 2;
+			}else if($align === 2){
+				$lx = ($width - $w) - $text_spacing;
+			}
+			$this->pdf->SetXY($x + $lx,$y + $ly);
+			$this->pdf->Cell(0,0,$text,0,empty($lines) ? 0 : 1);
+			
+			$y = $y + $h;
+		}
+		$this->work->deletePage(1);
+		$this->pdf->StopTransform();
+	}
+	
 	
 	/**
 	 * ファイルに書き出す
 	 * @param string $filename
 	 */
 	public function write($filename){
-		$this->before();
-		
 		$filename = \ebi\Util::path_absolute(getcwd(), $filename);
 		\ebi\Util::mkdir(dirname($filename));
 		
 		$this->pdf->Output($filename,'F');
-		
-		$this->after();
 	}
 	
 	/**
@@ -37,14 +240,10 @@ class Pdf{
 	 * @param string $filename
 	 */
 	public function output($filename=null){
-		$this->before();
-		
 		if(empty($filename)){
 			$filename = date('Ymd_his').'.pdf';
 		}
 		$this->pdf->Output($filename,'I');
-		
-		$this->after();
 	}
 	
 	/**
@@ -52,14 +251,10 @@ class Pdf{
 	 * @param string $filename
 	 */
 	public function download($filename=null){
-		$this->before();
-		
 		if(empty($filename)){
 			$filename = date('Ymd_his').'.pdf';
 		}
 		$this->pdf->Output($filename,'D');
-		
-		$this->after();
 	}
 	
 	/**
@@ -71,5 +266,58 @@ class Pdf{
 	public function version($version){
 		$this->pdf->setPDFVersion($version);
 		return $this;
+	}
+	
+	/**
+	 * 総ページ数を取得
+	 * @param string $pdffile
+	 * @return integer
+	 */
+	public static function get_num_pages($pdffile){
+		$pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
+		
+		try{
+			return $pdf->setSourceFile($pdffile);
+		}catch(\setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException $e){
+			if($e->getCode() === \setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException::ENCRYPTED){
+				throw new \tt\pdf\exception\EncryptedPdfDocumentException();
+			}
+			throw $e;
+		}catch(\Exception $e){
+			throw new \ebi\exception\AccessDeniedException();
+		}
+	}
+	
+	/**
+	 * ページ毎に抽出
+	 * @param string $pdffile
+	 * @param integer $start start page
+	 * @param integer $end end page
+	 * @throws \ebi\exception\AccessDeniedException
+	 */
+	public static function split($pdffile,$start=1,$end=null,$pdfversion=null){
+		$num_pages = self::get_num_pages($pdffile);
+		
+		if(empty($start)){
+			$start = 1;
+		}
+		if(empty($end) || $num_pages < $end){
+			$end = $num_pages;
+		}
+		for($page=$start;$page<=$end;$page++){
+			$self = new static();
+			$self->pdf->setSourceFile($pdffile);
+			
+			$template_id = $self->pdf->importPage($page);
+			$info = $self->pdf->getImportedPageSize($template_id);
+			
+			$self->pdf->AddPage($info['orientation'],[$info['width'],$info['height']]);
+			$self->pdf->useTemplate($template_id);
+			
+			if(!empty($pdfversion)){
+				$self->pdf->setPDFVersion($pdfversion);
+			}
+			yield $self;
+		}
 	}
 }
