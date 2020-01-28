@@ -3,23 +3,18 @@ namespace tt\pdf;
 
 class Pdf{
 	protected $pdf;
+	protected $width;
+	protected $height;
 	private $work;
 	
 	public function __construct($width,$height){
-		$mb_internal_encoding = mb_internal_encoding();
-		$this->pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
-		
-		$this->pdf->setPrintHeader(false);
-		$this->pdf->setPrintFooter(false);
-		$this->pdf->SetMargins(0,0,0);
-		$this->pdf->AddPage(($width > $height) ? 'L' : 'P',[$width,$height]);
-		
-		$this->work = new \setasign\Fpdi\Tcpdf\Fpdi();
-		$this->work->setPrintHeader(false);
-		$this->work->setPrintFooter(false);
-		$this->work->SetMargins(0,0,0);
-		
-		mb_internal_encoding($mb_internal_encoding);
+		if($width !== __FILE__){
+			$this->pdf = static::create_instance();
+			$this->pdf->AddPage(($width > $height) ? 'L' : 'P',[$width,$height]);
+			
+			$this->width = $width;
+			$this->height = $height;
+		}
 	}
 	
 	/**
@@ -124,6 +119,19 @@ class Pdf{
 		
 	}
 	
+	private static function create_instance(){
+		$mb_internal_encoding = mb_internal_encoding();
+		
+		$pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
+		$pdf->setPrintHeader(false);
+		$pdf->setPrintFooter(false);
+		$pdf->SetMargins(0,0,0);
+		
+		mb_internal_encoding($mb_internal_encoding);
+		
+		return $pdf;
+	}
+	
 	/**
 	 * テキストボックス
 	 * @param number $x mm
@@ -133,6 +141,10 @@ class Pdf{
 	 * @param string $text
 	 */
 	public function add_textbox($x,$y,$width,$height,$text,$opt=[]){
+		if(!isset($this->work)){
+			$this->work = static::create_instance();
+		}
+		
 		list($x,$y) = $this->xy($x,$y);
 		list($width,$height) = $this->xy($width,$height,$x,$y);
 		$this->work->AddPage(($width > $height) ? 'L' : 'P',[$width,$height]);
@@ -263,9 +275,25 @@ class Pdf{
 	 * @param number $version
 	 * @return \tt\pdf\Pdf
 	 */
-	public function version($version){
+	public function set_version($version){
 		$this->pdf->setPDFVersion($version);
 		return $this;
+	}
+	
+	/**
+	 * 幅
+	 * @return number
+	 */
+	public function width(){
+		return $this->width;
+	}
+
+	/**
+	 * 高さ
+	 * @return number
+	 */
+	public function height(){
+		return $this->height;
 	}
 	
 	/**
@@ -305,19 +333,23 @@ class Pdf{
 			$end = $num_pages;
 		}
 		for($page=$start;$page<=$end;$page++){
-			$self = new static();
-			$self->pdf->setSourceFile($pdffile);
+			$pdf = static::create_instance();
+			$pdf->setSourceFile($pdffile);
+			$template_id = $pdf->importPage($page);
+			$info = $pdf->getImportedPageSize($template_id);
 			
-			$template_id = $self->pdf->importPage($page);
-			$info = $self->pdf->getImportedPageSize($template_id);
+			$pdf->AddPage($info['orientation'],[$info['width'],$info['height']]);
+			$pdf->useTemplate($template_id);
 			
-			$self->pdf->AddPage($info['orientation'],[$info['width'],$info['height']]);
-			$self->pdf->useTemplate($template_id);
+			$self = new static(__FILE__,null);
+			$self->pdf = $pdf;
+			$self->width = $info['width'];
+			$self->height = $info['height'];
 			
 			if(!empty($pdfversion)){
 				$self->pdf->setPDFVersion($pdfversion);
 			}
-			yield $self;
+			yield $page=>$self;
 		}
 	}
 }
