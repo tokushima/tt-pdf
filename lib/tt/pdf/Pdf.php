@@ -2,10 +2,11 @@
 namespace tt\pdf;
 
 class Pdf{
-	protected $pdf;
-	protected $width;
-	protected $height;
+	private $pdf;
+	private $width;
+	private $height;
 	private $work;
+	private $last_error_file;
 	
 	public function __construct($width,$height){
 		if($width !== __FILE__){
@@ -39,17 +40,32 @@ class Pdf{
 	}
 	
 	/**
-	 *
-	 * @param number $x
-	 * @param number $y
-	 * @param number $width
-	 * @param number $height
+	 * SVGを追加
+	 * @param number $x mm
+	 * @param number $y mm
+	 * @param number $width mm
+	 * @param number $height mm
 	 * @param string $img
 	 */
 	public function add_svg($x,$y,$width,$height,$img){
 		list($x,$y) = $this->xy($x,$y);
 		
 		$this->pdf->ImageSVG($img,$x,$y,$width,$height,'','','',0,false);
+	}
+	
+	/**
+	 * PDFを追加
+	 * @param number $x mm
+	 * @param number $y mm
+	 * @param string $file
+	 * @throws \ebi\exception\AccessDeniedException
+	 */
+	public function add_pdf($x,$y,$file){
+		if(!is_file($file)){
+			throw new \ebi\exception\AccessDeniedException($file.' not found');
+		}
+		$this->pdf->setSourceFile($file);
+		$this->pdf->useTemplate($this->pdf->importPage(1),$x,$y);
 	}
 	
 	/**
@@ -87,23 +103,6 @@ class Pdf{
 		}
 	}
 	
-	/**
-	 * PDFを追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param string $file
-	 * @throws \ebi\exception\AccessDeniedException
-	 */
-	public function add_pdf($x,$y,$file){
-		if(!is_file($file)){
-			throw new \ebi\exception\AccessDeniedException($file.' not found');
-		}
-		$this->pdf->setSourceFile($file);
-		$this->pdf->useTemplate($this->pdf->importPage(1),$x,$y);
-	}
-	
-	
-	
 	private function xy($x,$y,$dx=0,$dy=0){
 		if($x < 0){
 			$x = $this->pdf->getPageWidth() + $x - $dx;
@@ -112,11 +111,6 @@ class Pdf{
 			$y = $this->pdf->getPageHeight() + $y - $dy;
 		}
 		return [$x,$y];
-	}
-	
-	
-	public function add_font(){
-		
 	}
 	
 	private static function create_instance(){
@@ -136,9 +130,23 @@ class Pdf{
 	 * テキストボックス
 	 * @param number $x mm
 	 * @param number $y mm
-	 * @param number $width
-	 * @param number $height
+	 * @param number $width mm
+	 * @param number $height mm
 	 * @param string $text
+	 * @param mixed{} $opt 
+	 * 
+	 * opt:
+	 *  align: 0: LEFT, 1: CENTER, 2: RIGHT
+	 *  valign: 0: TOP, 1: MIDDLE, 2: BOTTOM
+	 *  font_name: フォント名
+	 *  font_size: フォントサイズ pt
+	 *  color: #000000
+	 *  text_spacing: 文字間隔 pt
+	 *  text_leading: 行間隔 pt
+	 *  angle: 回転角度
+	 *  
+	 * フォントの追加:
+	 *  > vendor/tecnickcom/tcpdf/tools/tcpdf_addfont.php  -b -t CID0JP -f 32 -i *****.ttf
 	 */
 	public function add_textbox($x,$y,$width,$height,$text,$opt=[]){
 		if(!isset($this->work)){
@@ -156,11 +164,12 @@ class Pdf{
 		$color = $opt['color'] ?? '#000000';
 		$text_spacing = $opt['text_spacing'] ?? 0;
 		$text_leading = $opt['text_leading'] ?? 0;
-		$angle = $opt['rotate'] ?? 0;
+		$angle = $opt['angle'] ?? 0;
 		$style = '';
 		
 		list($r,$g,$b) = [hexdec(substr($color,1,2)),hexdec(substr($color,3,2)),hexdec(substr($color,5,2))];
-		$this->pdf->SetFont($font_name,'',$font_size);
+		
+		$this->pdf->SetFont($font_name,$style,$font_size);
 		$this->pdf->SetTextColor($r,$g,$b);
 		$this->pdf->SetFontSpacing($text_spacing);
 		$this->work->SetFontSpacing($text_spacing);
@@ -303,7 +312,28 @@ class Pdf{
 	 */
 	public static function get_num_pages($pdffile){
 		$pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
+		return static::set_source($pdf, $pdffile);
+	}
+	
+	/**
+	 * ページサイズ mm
+	 * @param string $pdffile
+	 * @param number $page
+	 * @return array
+	 */
+	public static function get_size($pdffile,$page=1){
+		$pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
+		static::set_source($pdf, $pdffile);
 		
+		$template_id = $pdf->importPage($page);
+		$info = $pdf->getImportedPageSize($template_id);
+		
+		return [
+			'width'=>$info['width'],
+			'height'=>$info['height'],
+		];
+	}
+	private static function set_source($pdf,$pdffile){
 		try{
 			return $pdf->setSourceFile($pdffile);
 		}catch(\setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException $e){
