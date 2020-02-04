@@ -50,7 +50,7 @@ class Pdf{
 	public function add_svg($x,$y,$width,$height,$img){
 		list($x,$y) = $this->xy($x,$y);
 		
-		$this->pdf->ImageSVG($img,$x,$y,$width,$height,'','','',0,false);
+		$this->pdf->ImageSVG($img,$x,$y,$width,$height);
 	}
 	
 	/**
@@ -138,15 +138,16 @@ class Pdf{
 	 * opt:
 	 *  align: 0: LEFT, 1: CENTER, 2: RIGHT
 	 *  valign: 0: TOP, 1: MIDDLE, 2: BOTTOM
-	 *  font_name: フォント名
+	 *  font_name: フォントファミリー
 	 *  font_size: フォントサイズ pt
 	 *  color: #000000
 	 *  text_spacing: 文字間隔 pt
 	 *  text_leading: 行間隔 pt
 	 *  angle: 回転角度
 	 *  
-	 * フォントの追加:
-	 *  > vendor/tecnickcom/tcpdf/tools/tcpdf_addfont.php  -b -t CID0JP -f 32 -i *****.ttf
+	 * フォントの追加 (埋め込み型):
+	 *  > vendor/tecnickcom/tcpdf/tools/tcpdf_addfont.php -t TrueTypeUnicode -f 32 -i *****.ttf
+	 * 
 	 */
 	public function add_textbox($x,$y,$width,$height,$text,$opt=[]){
 		if(!isset($this->work)){
@@ -169,6 +170,7 @@ class Pdf{
 		
 		list($r,$g,$b) = [hexdec(substr($color,1,2)),hexdec(substr($color,3,2)),hexdec(substr($color,5,2))];
 		
+		$this->pdf->setFontSubsetting(true);
 		$this->pdf->SetFont($font_name,$style,$font_size);
 		$this->pdf->SetTextColor($r,$g,$b);
 		$this->pdf->SetFontSpacing($text_spacing);
