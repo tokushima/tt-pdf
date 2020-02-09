@@ -122,6 +122,42 @@ class Pdf{
 		return $this;
 	}
 	
+	
+	/**
+	 * QR Code
+	 * @param number $x mm
+	 * @param number $y mm
+	 * @param number $width mm
+	 * @param number $value mm
+	 * @param array $style
+	 * 
+	 * style:
+	 *  color: #000000
+	 *  bgcolor: #FFFFFF
+	 *  padding: number (cell)
+	 *  level: L, M, Q, H (error correction level)
+	 * 
+	 * @return \tt\pdf\Pdf
+	 */
+	public function add_qrcode($x,$y,$width,$value,$style=[]){
+		$type = 'QRCODE';
+		$st = [
+			'padding'=>isset($style['padding']) ? (int)$style['padding'] : 'auto'
+		];
+		if(isset($style['bgcolor'])){
+			$st['bgcolor'] = $this->color2rgb($style['bgcolor']);
+		}
+		if(!empty($style['color'])){
+			$st['fgcolor'] = $this->color2rgb($style['color']);
+		}
+		if(!empty($style['level'])){
+			$type = $type.','.$style['level'];
+		}
+		
+		$this->pdf->write2DBarcode($value,$type,$x,$y,$width,$width,$st);
+		return $this;
+	}
+	
 	/**
 	 * ルーラーの表示
 	 * @return $this
@@ -150,6 +186,27 @@ class Pdf{
 			$y = $this->pdf->getPageHeight() + $y - $dy;
 		}
 		return [$x,$y];
+	}
+	
+	/**
+	 * カラーモードからRGB（10進数）を返す
+	 * @param string $color_code
+	 * @return integer[] R,G,B
+	 */
+	private function color2rgb($color_code){
+		if(substr($color_code,0,1) == '#'){
+			$color_code = substr($color_code,1);
+		}
+		if(strlen($color_code) == 6){
+			$r = hexdec(substr($color_code,0,2));
+			$g = hexdec(substr($color_code,2,2));
+			$b = hexdec(substr($color_code,4,2));
+		}else{
+			$r = hexdec(substr($color_code,0,1));
+			$g = hexdec(substr($color_code,1,1));
+			$b = hexdec(substr($color_code,2,1));
+		}
+		return [$r,$g,$b];
 	}
 	
 	/**
