@@ -4,30 +4,33 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2ff43ceab1163c571b5fe9e704dd6ecc",
+    "content-hash": "faf3ed7ca58bc69048f1f6a07ac80354",
     "packages": [
         {
             "name": "setasign/fpdi",
-            "version": "v2.2.0",
+            "version": "v2.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Setasign/FPDI.git",
-                "reference": "3c266002f8044f61b17329f7cd702d44d73f0f7f"
+                "reference": "ff7e43e07abb97feb4a1cceaf72d75ce0e175ca0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Setasign/FPDI/zipball/3c266002f8044f61b17329f7cd702d44d73f0f7f",
-                "reference": "3c266002f8044f61b17329f7cd702d44d73f0f7f",
+                "url": "https://api.github.com/repos/Setasign/FPDI/zipball/ff7e43e07abb97feb4a1cceaf72d75ce0e175ca0",
+                "reference": "ff7e43e07abb97feb4a1cceaf72d75ce0e175ca0",
                 "shasum": ""
             },
             "require": {
                 "ext-zlib": "*",
                 "php": "^5.6 || ^7.0"
             },
+            "conflict": {
+                "setasign/tfpdf": "<1.31"
+            },
             "require-dev": {
                 "phpunit/phpunit": "~5.7",
                 "setasign/fpdf": "~1.8",
-                "setasign/tfpdf": "1.25",
+                "setasign/tfpdf": "1.31",
                 "tecnickcom/tcpdf": "~6.2"
             },
             "suggest": {
@@ -65,46 +68,7 @@
                 "fpdi",
                 "pdf"
             ],
-            "time": "2019-01-30T14:11:19+00:00"
-        },
-        {
-            "name": "setasign/fpdi-tcpdf",
-            "version": "v2.2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Setasign/FPDI-TCPDF.git",
-                "reference": "95778baea02e5da76acb9f6dc1c946be380a22d8"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Setasign/FPDI-TCPDF/zipball/95778baea02e5da76acb9f6dc1c946be380a22d8",
-                "reference": "95778baea02e5da76acb9f6dc1c946be380a22d8",
-                "shasum": ""
-            },
-            "require": {
-                "setasign/fpdi": "^2.2",
-                "tecnickcom/tcpdf": "^6.2"
-            },
-            "type": "library",
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jan Slabon",
-                    "email": "jan.slabon@setasign.com",
-                    "homepage": "https://www.setasign.com"
-                }
-            ],
-            "description": "Kind of metadata package for dependencies of the latest versions of FPDI and TCPDF.",
-            "homepage": "https://www.setasign.com/fpdi",
-            "keywords": [
-                "TCPDF",
-                "fpdi",
-                "pdf"
-            ],
-            "time": "2019-01-30T14:39:33+00:00"
+            "time": "2020-02-19T11:30:55+00:00"
         },
         {
             "name": "tecnickcom/tcpdf",
@@ -170,16 +134,16 @@
         },
         {
             "name": "tokushima/ebi",
-            "version": "3.0.6",
+            "version": "3.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tokushima/ebi.git",
-                "reference": "0aefb0da4424ac08e8cfa45e31e5e1e81eda53ef"
+                "reference": "871eeaef4deb090a2714e4efaf6d478d6332478b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tokushima/ebi/zipball/0aefb0da4424ac08e8cfa45e31e5e1e81eda53ef",
-                "reference": "0aefb0da4424ac08e8cfa45e31e5e1e81eda53ef",
+                "url": "https://api.github.com/repos/tokushima/ebi/zipball/871eeaef4deb090a2714e4efaf6d478d6332478b",
+                "reference": "871eeaef4deb090a2714e4efaf6d478d6332478b",
                 "shasum": ""
             },
             "require": {
@@ -204,7 +168,7 @@
                     "name": "tokushima"
                 }
             ],
-            "time": "2019-12-08T15:12:26+00:00"
+            "time": "2020-03-09T12:31:12+00:00"
         }
     ],
     "packages-dev": [],
