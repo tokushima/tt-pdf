@@ -108,16 +108,69 @@ class Pdf{
 	 * @param number $sy mm
 	 * @param number $ex mm
 	 * @param number $ey mm
-	 * @param number $bordersize mm
+	 * @param mixed{} $style 
+	 * 
+	 * style:
+	 *  border_color: string 線の色 #FFFFFF
+	 *  border_width: number 線の太さ mm
+	 *  dash: number|string 破線パターン 1 or 1,2 mm
+	 *  
 	 * @return $this
 	 */
-	public function add_line($sx,$sy,$ex,$ey,$bordersize=0.2){
+	public function add_line($sx,$sy,$ex,$ey,$style=[]){
 		list($sx,$sy) = $this->xy($sx,$sy);
 		list($ex,$ey) = $this->xy($ex,$ey);
 		
-		$this->pdf->SetLineWidth($bordersize);
+		$border_width = $style['border_width'] ?? 0.2;
+		$border_color = $this->color2rgb($style['border_color'] ?? ($style['color'] ?? '#000000'));
+		$border_dash = $style['dash'] ?? null;
+		
+		$this->pdf->SetLineStyle(['width'=>$border_width,'color'=>$border_color,'dash'=>$border_dash,]);
 		$this->pdf->Line($sx,$sy,$ex,$ey);
-		$this->pdf->SetLineStyle(['width'=>0.2,'color'=>[0,0,0]]);
+		
+		return $this;
+	}
+	
+	/**
+	 * 矩形
+	 * @param number $x mm
+	 * @param number $y mm
+	 * @param number $w mm
+	 * @param number $h mm
+	 * @param mixed{} $style 
+	 * 
+	 * style:
+	 *  fill: boolean true: 塗りつぶす
+	 *  color: string 色 #000000 
+	 *  border_color: string 線の色 #FFFFFF
+	 *  border_width: number 線の太さ mm
+	 *  dash: number|string 破線パターン 1 or 1,2 mm
+	 * 
+	 * @return \tt\pdf\Pdf
+	 */
+	public function add_rect($x,$y,$w,$h,$style=[]){
+		$s = ($style['fill'] ?? false) ? 'F' : 'D';
+		$color = $this->color2rgb($style['color'] ?? '#000000');
+		$border_style = [];
+		
+		$border_width = $style['border_width'] ?? null;
+		$border_color = $this->color2rgb($style['border_color'] ?? ($style['color'] ?? '#000000'));
+		$border_dash = $style['dash'] ?? null;
+		
+		if($border_width !== null || $s === 'D'){
+			$border_style = [
+				'all'=>[
+					'width'=>$border_width ?? 0.2,
+					'color'=>$border_color,
+					'dash'=>$border_dash,
+				],
+			];
+			
+			if($s === 'F'){
+				$s = 'FD';
+			}
+		}
+		$this->pdf->Rect($x,$y,$w,$h,$s,$border_style,$color);
 		
 		return $this;
 	}
@@ -129,11 +182,11 @@ class Pdf{
 	 * @param number $y mm
 	 * @param number $width mm
 	 * @param number $value mm
-	 * @param array $style
+	 * @param mixed{} $style
 	 * 
 	 * style:
-	 *  color: #000000
-	 *  bgcolor: #FFFFFF
+	 *  color: string #000000
+	 *  bgcolor: string #FFFFFF
 	 *  padding: number (cell)
 	 *  level: L, M, Q, H (error correction level)
 	 * 
@@ -176,6 +229,52 @@ class Pdf{
 			$this->add_line(0, $mm, $l, $mm);
 		}
 		return $this;
+	}
+	
+	/**
+	 * トンボ
+	 * @param number $x mm
+	 * @param number $y mm
+	 * @param number $w mm
+	 * @param number $h mm 
+	 * @param number $mark 角トンボの長さ mm 
+	 * @param number $bleed ドブ幅 mm 
+	 * @param boolean $center センタートンボの表示
+	 */
+	public function trim_mark($x,$y,$w,$h,$mark=9,$bleed=3,$center=true){
+		$this->add_line($x, $y-$bleed, $x, $y-$bleed-$mark);
+		$this->add_line($x, $y-$bleed, $x-$bleed-$mark, $y-$bleed);
+		$this->add_line($x-$bleed, $y, $x-$bleed, $y-$bleed-$mark);
+		$this->add_line($x-$bleed, $y, $x-$bleed-$mark, $y);
+		
+		$this->add_line($x+$w, $y-$bleed, $x+$w, $y-$bleed-$mark);
+		$this->add_line($x+$w, $y-$bleed, $x+$w+$bleed+$mark, $y-$bleed);
+		$this->add_line($x+$w+$bleed, $y, $x+$w+$bleed, $y-$bleed-$mark);
+		$this->add_line($x+$w+$bleed, $y, $x+$w+$bleed+$mark, $y);
+		
+		$this->add_line($x, $y+$h+$bleed, $x, $y+$h+$bleed+$mark);
+		$this->add_line($x, $y+$h+$bleed, $x-$bleed-$mark, $y+$h+$bleed);
+		$this->add_line($x-$bleed, $y+$h, $x-$bleed, $y+$h+$bleed+$mark);
+		$this->add_line($x-$bleed, $y+$h, $x-$bleed-$mark, $y+$h);
+		
+		$this->add_line($x+$w, $y+$h+$bleed, $x+$w, $y+$h+$bleed+$mark);
+		$this->add_line($x+$w, $y+$h+$bleed, $x+$w+$bleed+$mark, $y+$h+$bleed);
+		$this->add_line($x+$w+$bleed, $y+$h, $x+$w+$bleed, $y+$h+$bleed+$mark);
+		$this->add_line($x+$w+$bleed, $y+$h, $x+$w+$bleed+$mark, $y+$h);
+		
+		if($center){
+			$this->add_line($x-($bleed*2), $y+($h/2)-($h/6), $x-($bleed*2), $y+($h/2)+($h/6));
+			$this->add_line($x-($bleed*2)+1, $y+($h/2), $x-($bleed*2)-$bleed, $y+($h/2));
+			
+			$this->add_line($x+$w+($bleed*2), $y+($h/2)-($h/6), $x+$w+($bleed*2), $y+($h/2)+($h/6));
+			$this->add_line($x+$w+($bleed*2)-1, $y+($h/2), $x+$w+($bleed*2)+$bleed, $y+($h/2));
+			
+			$this->add_line($x+($w/2)-($w/6), $y-($bleed*2), $x+($w/2)+($w/6), $y-($bleed*2));
+			$this->add_line($x+($w/2), $y-($bleed*2)+1, $x+($w/2), $y-($bleed*2)-$bleed);
+			
+			$this->add_line($x+($w/2)-($w/6),$y+$h+($bleed*2),$x+($w/2)+($w/6),$y+$h+($bleed*2));
+			$this->add_line($x+($w/2), $y+$h+($bleed*2)-1, $x+($w/2), $y+$h+($bleed*2)+$bleed);
+		}
 	}
 	
 	private function xy($x,$y,$dx=0,$dy=0){
