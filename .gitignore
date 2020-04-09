@@ -1,12 +1,7 @@
-/cmdman.phar
-/composer.phar
 /vendor/
-/.buildpath
-/.project
-/.settings/
+/work
+/fonts
+test.php
+cmdman.phar
+composer.phar
 
-/test.php
-/out.pdf
-/test.pdf
-/work/
-/publish/

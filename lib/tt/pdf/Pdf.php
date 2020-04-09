@@ -42,27 +42,38 @@ class Pdf{
 		return $this;
 	}
 	
+	private function rotate($x,$y,array $opt){
+		if(($opt['angle'] ?? 0) !== 0){
+			$this->pdf->StartTransform();
+			$this->pdf->Rotate($opt['angle'],$x,$y);
+		}
+	}
+	
 	/**
 	 * 画像を追加
 	 * @param number $x mm
 	 * @param number $y mm
-	 * @param number $dpi
-	 * @param string $img
+	 * @param string $filepath
 	 * @throws \ebi\exception\ImageException
 	 * @return $this
 	 */
-	public function add_image($x,$y,$dpi,$img){
-		list($x,$y) = $this->xy($x,$y);
-		
-		$info = \ebi\Image::get_info($img);
-		$width = ($info['width'] / $dpi * 25.4);
-		$height = ($info['height'] / $dpi * 25.4);
+	public function add_image($x,$y,$filepath,$opt=[]){
+		$info = \ebi\Image::get_info($filepath);
 		
 		if($info['mime'] !== 'image/jpeg' && $info['mime'] !== 'image/png'){
 			throw new \ebi\exception\ImageException('image not supported');
 		}
-		$this->pdf->Image($img,$x,$y,$width,$height,'','','',true);
 		
+		list($x,$y) = $this->xy($x,$y);
+		$this->rotate($x, $y, $opt);
+		
+		$dpi = $opt['dpi'] ?? 72;
+		$width = ($info['width'] / $dpi * 25.4);
+		$height = ($info['height'] / $dpi * 25.4);
+		
+		$this->pdf->Image($filepath,$x,$y,$width,$height,'','','',true);
+		
+		$this->pdf->StopTransform();
 		return $this;
 	}
 	
@@ -72,13 +83,16 @@ class Pdf{
 	 * @param number $y mm
 	 * @param number $width mm
 	 * @param number $height mm
-	 * @param string $img
+	 * @param string $filepath
 	 * @return $this
 	 */
-	public function add_svg($x,$y,$width,$height,$img){
+	public function add_svg($x,$y,$width,$height,$filepath,$opt=[]){
 		list($x,$y) = $this->xy($x,$y);
+		$this->rotate($x, $y, $opt);
 		
-		$this->pdf->ImageSVG($img,$x,$y,$width,$height);
+		$this->pdf->ImageSVG($filepath,$x,$y,$width,$height);
+		
+		$this->pdf->StopTransform();
 		return $this;
 	}
 	
@@ -90,15 +104,17 @@ class Pdf{
 	 * @throws \ebi\exception\AccessDeniedException
 	 * @return $this
 	 */
-	public function add_pdf($x,$y,$file){
-		if(!is_file($file)){
-			throw new \ebi\exception\AccessDeniedException($file.' not found');
+	public function add_pdf($x,$y,$filepath,$opt=[]){
+		if(!is_file($filepath)){
+			throw new \ebi\exception\AccessDeniedException($filepath.' not found');
 		}
 		list($x,$y) = $this->xy($x,$y);
+		$this->rotate($x, $y, $opt);
 		
-		$this->pdf->setSourceFile($file);
-		$this->pdf->useTemplate($this->pdf->importPage(1),$x,$y);
+		$this->pdf->setSourceFile($filepath);
+		$this->pdf->useTemplate($this->pdf->importPage(1),$x,$y,$opt['width'] ?? null,$opt['height'] ?? null);
 		
+		$this->pdf->StopTransform();
 		return $this;
 	}
 	
@@ -108,7 +124,7 @@ class Pdf{
 	 * @param number $sy mm
 	 * @param number $ex mm
 	 * @param number $ey mm
-	 * @param mixed{} $style 
+	 * @param mixed{} $opt 
 	 * 
 	 * style:
 	 *  border_color: string 線の色 #FFFFFF
@@ -117,13 +133,13 @@ class Pdf{
 	 *  
 	 * @return $this
 	 */
-	public function add_line($sx,$sy,$ex,$ey,$style=[]){
+	public function add_line($sx,$sy,$ex,$ey,$opt=[]){
 		list($sx,$sy) = $this->xy($sx,$sy);
 		list($ex,$ey) = $this->xy($ex,$ey);
 		
-		$border_width = $style['border_width'] ?? 0.2;
-		$border_color = $this->color2rgb($style['border_color'] ?? ($style['color'] ?? '#000000'));
-		$border_dash = $style['dash'] ?? null;
+		$border_width = $opt['border_width'] ?? 0.2;
+		$border_color = $this->color2rgb($opt['border_color'] ?? ($opt['color'] ?? '#000000'));
+		$border_dash = $opt['dash'] ?? null;
 		
 		$this->pdf->SetLineStyle(['width'=>$border_width,'color'=>$border_color,'dash'=>$border_dash,]);
 		$this->pdf->Line($sx,$sy,$ex,$ey);
@@ -137,7 +153,7 @@ class Pdf{
 	 * @param number $y mm
 	 * @param number $w mm
 	 * @param number $h mm
-	 * @param mixed{} $style 
+	 * @param mixed{} $opt 
 	 * 
 	 * style:
 	 *  fill: boolean true: 塗りつぶす
@@ -148,14 +164,14 @@ class Pdf{
 	 * 
 	 * @return \tt\pdf\Pdf
 	 */
-	public function add_rect($x,$y,$w,$h,$style=[]){
-		$s = ($style['fill'] ?? false) ? 'F' : 'D';
-		$color = $this->color2rgb($style['color'] ?? '#000000');
+	public function add_rect($x,$y,$w,$h,$opt=[]){
+		$s = ($opt['fill'] ?? false) ? 'F' : 'D';
+		$color = $this->color2rgb($opt['color'] ?? '#000000');
 		$border_style = [];
 		
-		$border_width = $style['border_width'] ?? null;
-		$border_color = $this->color2rgb($style['border_color'] ?? ($style['color'] ?? '#000000'));
-		$border_dash = $style['dash'] ?? null;
+		$border_width = $opt['border_width'] ?? null;
+		$border_color = $this->color2rgb($opt['border_color'] ?? ($opt['color'] ?? '#000000'));
+		$border_dash = $opt['dash'] ?? null;
 		
 		if($border_width !== null || $s === 'D'){
 			$border_style = [
@@ -170,46 +186,13 @@ class Pdf{
 				$s = 'FD';
 			}
 		}
+		
+		$this->rotate($x, $y, $opt);
 		$this->pdf->Rect($x,$y,$w,$h,$s,$border_style,$color);
-		
+		$this->pdf->StopTransform();
 		return $this;
 	}
 	
-	
-	/**
-	 * QR Code
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $value mm
-	 * @param mixed{} $style
-	 * 
-	 * style:
-	 *  color: string #000000
-	 *  bgcolor: string #FFFFFF
-	 *  padding: number (cell)
-	 *  level: L, M, Q, H (error correction level)
-	 * 
-	 * @return \tt\pdf\Pdf
-	 */
-	public function add_qrcode($x,$y,$width,$value,$style=[]){
-		$type = 'QRCODE';
-		$st = [
-			'padding'=>isset($style['padding']) ? (int)$style['padding'] : 'auto'
-		];
-		if(isset($style['bgcolor'])){
-			$st['bgcolor'] = $this->color2rgb($style['bgcolor']);
-		}
-		if(!empty($style['color'])){
-			$st['fgcolor'] = $this->color2rgb($style['color']);
-		}
-		if(!empty($style['level'])){
-			$type = $type.','.$style['level'];
-		}
-		
-		$this->pdf->write2DBarcode($value,$type,$x,$y,$width,$width,$st);
-		return $this;
-	}
 	
 	/**
 	 * ルーラーの表示
@@ -334,31 +317,25 @@ class Pdf{
 	public function add_textbox($x,$y,$width,$height,$text,$opt=[]){
 		list($x,$y) = $this->xy($x,$y);
 		list($width,$height) = $this->xy($width,$height,$x,$y);
+		$this->rotate($x, $y, $opt);
 		
 		$align = $opt['align'] ?? 0;
 		$valign = $opt['valign'] ?? 0;
-		$font_name = $opt['font_name'] ?? 'kozminproregular';
+		$font_family = $opt['font_family'] ?? 'kozminproregular';
 		$font_size = $opt['font_size'] ?? 8;
 		$color = $opt['color'] ?? '#000000';
 		$text_spacing = $opt['text_spacing'] ?? 0;
 		$text_leading = $opt['text_leading'] ?? 0;
-		$angle = $opt['angle'] ?? 0;
-		$style = '';
 		
 		list($r,$g,$b) = [hexdec(substr($color,1,2)),hexdec(substr($color,3,2)),hexdec(substr($color,5,2))];
 		
+		$this->pdf->SetFont($font_family,'',$font_size);
 		$this->pdf->setFontSubsetting(true);
-		$this->pdf->SetFont($font_name,$style,$font_size);
 		$this->pdf->SetTextColor($r,$g,$b);
 		$this->pdf->SetFontSpacing($text_spacing);
 		
 		self::work()->AddPage(($width > $height) ? 'L' : 'P',[$width,$height]);
 		self::work()->SetFontSpacing($text_spacing);
-		
-		if($angle !== 0){
-			$this->pdf->StartTransform();
-			$this->pdf->Rotate($angle,0,0);
-		}
 		
 		$text_h = 0;
 		$lines = [];
@@ -366,7 +343,7 @@ class Pdf{
 			$next = '';
 			
 			while(true){
-				$w = $this->pdf->GetStringWidth($line,$font_name,$style,$font_size);
+				$w = $this->pdf->GetStringWidth($line,$font_family,'',$font_size);
 				
 				if($w >= $width){
 					$next = mb_substr($line,-1).$next;
@@ -391,7 +368,7 @@ class Pdf{
 			if(!empty($next)){
 				self::work()->Cell(0,0,$next);
 				$h = self::work()->getLastH() + $text_leading;
-				$w = $this->pdf->GetStringWidth($next,$font_name,$style,$font_size);
+				$w = $this->pdf->GetStringWidth($next,$font_family,$opt,$font_size);
 				
 				if($text_h + $h > $height){
 					break;
@@ -529,8 +506,6 @@ class Pdf{
 			throw new \ebi\exception\AccessDeniedException();
 		}
 	}
-	
-	
 	
 	/**
 	 * ページ毎に抽出
