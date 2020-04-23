@@ -6,6 +6,7 @@ class Pdf{
 	
 	private $pdf;
 	private $current = 0;
+	private $current_page_size = [0,0];
 	private $last_error_file;
 	
 	public function __construct(){
@@ -16,6 +17,8 @@ class Pdf{
 		$this->pdf->setPrintHeader(false);
 		$this->pdf->setPrintFooter(false);
 		$this->pdf->SetMargins(0,0,0);
+		$this->pdf->setCellPaddings(0,0,0,0);
+		$this->pdf->SetAutoPageBreak(false);
 	}
 	
 	private static function work(){
@@ -27,8 +30,26 @@ class Pdf{
 			self::$work->setPrintHeader(false);
 			self::$work->setPrintFooter(false);
 			self::$work->SetMargins(0,0,0);
+			self::$work->setCellPaddings(0,0,0,0);
+			self::$work->SetAutoPageBreak(false);
 		}
 		return self::$work;
+	}
+	
+	/**
+	 * Defines the author of the document
+	 * @param string $author
+	 */
+	public function author($author){
+		$this->pdf->SetAuthor($author);
+	}
+	
+	/**
+	 * Defines the creator of the document
+	 * @param string $creator
+	 */
+	public function creator($creator){
+		$this->pdf->SetCreator($creator);
 	}
 	
 	/**
@@ -39,6 +60,7 @@ class Pdf{
 	 */
 	public function add_page($width,$height){
 		$this->pdf->AddPage(($width > $height) ? 'L' : 'P',[$width,$height]);
+		$this->current_page_size = [$width,$height];
 		return $this;
 	}
 	
@@ -71,8 +93,7 @@ class Pdf{
 		$width = ($info['width'] / $dpi * 25.4);
 		$height = ($info['height'] / $dpi * 25.4);
 		
-		$this->pdf->Image($filepath,$x,$y,$width,$height,'','','',true);
-		
+		$this->pdf->Image($filepath,$x,$y,$width,$height);
 		$this->pdf->StopTransform();
 		return $this;
 	}
@@ -91,6 +112,26 @@ class Pdf{
 		$this->rotate($x, $y, $opt);
 		
 		$this->pdf->ImageSVG($filepath,$x,$y,$width,$height);
+		
+		$this->pdf->StopTransform();
+		return $this;
+	}
+	
+	/**
+	 * SVG文字列を追加
+	 * @param number $x mm
+	 * @param number $y mm
+	 * @param number $width mm
+	 * @param number $height mm
+	 * @param string $svgstring
+	 * @param array $opt
+	 * @return \tt\pdf\Pdf
+	 */
+	public function add_svg_string($x,$y,$width,$height,$svgstring,$opt=[]){
+		list($x,$y) = $this->xy($x,$y);
+		$this->rotate($x, $y, $opt);
+		
+		$this->pdf->ImageSVG('@'.$svgstring,$x,$y,$width,$height);
 		
 		$this->pdf->StopTransform();
 		return $this;
@@ -126,7 +167,7 @@ class Pdf{
 	 * @param number $ey mm
 	 * @param mixed{} $opt 
 	 * 
-	 * style:
+	 * opt:
 	 *  border_color: string 線の色 #FFFFFF
 	 *  border_width: number 線の太さ mm
 	 *  dash: number|string 破線パターン 1 or 1,2 mm
@@ -141,8 +182,19 @@ class Pdf{
 		$border_color = $this->color2rgb($opt['border_color'] ?? ($opt['color'] ?? '#000000'));
 		$border_dash = $opt['dash'] ?? null;
 		
-		$this->pdf->SetLineStyle(['width'=>$border_width,'color'=>$border_color,'dash'=>$border_dash,]);
+		$this->pdf->SetLineStyle([
+			'width'=>$border_width,
+			'color'=>$border_color,
+			'dash'=>$border_dash,
+		]);
 		$this->pdf->Line($sx,$sy,$ex,$ey);
+		
+		// reset
+		$this->pdf->SetLineStyle([
+			'width'=>0.2,
+			'color'=>$this->color2rgb('#000000'),
+			'dash'=>0,
+		]);
 		
 		return $this;
 	}
@@ -165,31 +217,81 @@ class Pdf{
 	 * @return \tt\pdf\Pdf
 	 */
 	public function add_rect($x,$y,$w,$h,$opt=[]){
-		$s = ($opt['fill'] ?? false) ? 'F' : 'D';
-		$color = $this->color2rgb($opt['color'] ?? '#000000');
-		$border_style = [];
-		
+		$style = ($opt['fill'] ?? false) ? 'F' : 'D';
+		$color = $opt['color'] ?? '#000000';
+		$color_rgb = $this->color2rgb($color);
 		$border_width = $opt['border_width'] ?? null;
-		$border_color = $this->color2rgb($opt['border_color'] ?? ($opt['color'] ?? '#000000'));
+		$border_rgb = $this->color2rgb($opt['border_color'] ?? $color);
 		$border_dash = $opt['dash'] ?? null;
 		
-		if($border_width !== null || $s === 'D'){
+		$border_style = [];
+		if($border_width !== null || $style === 'D'){
 			$border_style = [
 				'all'=>[
 					'width'=>$border_width ?? 0.2,
-					'color'=>$border_color,
+					'color'=>$border_rgb,
 					'dash'=>$border_dash,
 				],
 			];
 			
-			if($s === 'F'){
-				$s = 'FD';
+			if($style === 'F'){
+				$style = 'FD';
 			}
 		}
 		
 		$this->rotate($x, $y, $opt);
-		$this->pdf->Rect($x,$y,$w,$h,$s,$border_style,$color);
+		$this->pdf->Rect($x,$y,$w,$h,$style,$border_style,$color_rgb);
 		$this->pdf->StopTransform();
+		return $this;
+	}
+	
+	/**
+	 * 円
+	 * @param number $x mm
+	 * @param number $y mm
+	 * @param number $diameter 直径 mm
+	 * @param mixed{} $opt 
+	 * 
+	 * style:
+	 *  fill: boolean true: 塗りつぶす
+	 *  color: string 色 #000000 
+	 *  border_color: string 線の色 #FFFFFF
+	 *  border_width: number 線の太さ mm
+	 *  dash: number|string 破線パターン 1 or 1,2 mm
+	 * 
+	 * @return \tt\pdf\Pdf
+	 */
+	public function add_circle($x,$y,$diameter,$opt=[]){
+		$style = ($opt['fill'] ?? false) ? 'F' : 'D';
+		$color = $opt['color'] ?? '#000000';
+		$color_rgb = $this->color2rgb($color);
+		$border_width = $opt['border_width'] ?? null;
+		$border_rgb = $this->color2rgb($opt['border_color'] ?? $color);
+		$border_dash = $opt['dash'] ?? null;
+		
+		$r = $diameter / 2;
+		$x = $x + $r;
+		$y = $y + $r;
+		
+		$border_style = [];
+		if($border_width !== null || $style === 'D'){
+			$border_style = [
+				'width'=>$border_width ?? 0.2,
+				'color'=>$border_rgb,
+				'dash'=>$border_dash,
+			];
+			
+			if($style === 'F'){
+				$style = 'FD';
+			}
+		}
+		
+		$border_style = [
+			'width'=>$border_width ?? 0.2,
+			'color'=>$border_rgb,
+			'dash'=>$border_dash,
+		];
+		$this->pdf->Ellipse($x, $y, $r,'',0,0,360,$style,$border_style,$color_rgb);
 		return $this;
 	}
 	
@@ -204,11 +306,11 @@ class Pdf{
 		
 		$this->add_line(0, 0, 0, 5);
 		for($mm=0;$mm<=$w;$mm+=1){
-			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0) ? 3 : 1);
+			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0) ? 3 : (($mm % 5 === 0) ? 2 : 1));
 			$this->add_line($mm, 0, $mm, $l);
 		}
 		for($mm=0;$mm<=$h;$mm+=1){
-			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0 ) ? 3 : 1);
+			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0) ? 3 : (($mm % 5 === 0) ? 2 : 1));
 			$this->add_line(0, $mm, $l, $mm);
 		}
 		return $this;
@@ -260,6 +362,21 @@ class Pdf{
 		}
 	}
 	
+	/**
+	 * 十字線
+	 * @param number $x
+	 * @param number $y
+	 * 
+	 * opt:
+	 *  border_color: string 線の色 #FFFFFF
+	 *  border_width: number 線の太さ mm
+	 *  dash: number|string 破線パターン 1 or 1,2 mm
+	 */
+	public function crosshair($x,$y,$opt=[]){
+		$this->add_line(0, $y, $this->current_page_size[0], $y,$opt);
+		$this->add_line($x, 0, $x, $this->current_page_size[1],$opt);
+	}
+	
 	private function xy($x,$y,$dx=0,$dy=0){
 		if($x < 0){
 			$x = $this->pdf->getPageWidth() + $x - $dx;
@@ -303,7 +420,7 @@ class Pdf{
 	 * opt:
 	 *  align: 0: LEFT, 1: CENTER, 2: RIGHT
 	 *  valign: 0: TOP, 1: MIDDLE, 2: BOTTOM
-	 *  font_name: フォントファミリー
+	 *  font_family: フォントファミリー
 	 *  font_size: フォントサイズ pt
 	 *  color: #000000
 	 *  text_spacing: 文字間隔 pt
@@ -312,6 +429,7 @@ class Pdf{
 	 *  
 	 * フォントの追加 (埋め込み型):
 	 *  > vendor/tecnickcom/tcpdf/tools/tcpdf_addfont.php -t TrueTypeUnicode -f 32 -i *****.ttf
+	 *  -t: TrueTypeUnicode, TrueType, Type1, CID0JP, CID0KR, CID0CS, CID0CT
 	 * @return $this
 	 */
 	public function add_textbox($x,$y,$width,$height,$text,$opt=[]){
@@ -368,7 +486,7 @@ class Pdf{
 			if(!empty($next)){
 				self::work()->Cell(0,0,$next);
 				$h = self::work()->getLastH() + $text_leading;
-				$w = $this->pdf->GetStringWidth($next,$font_family,$opt,$font_size);
+				$w = $this->pdf->GetStringWidth($next,$font_family,'',$font_size);
 				
 				if($text_h + $h > $height){
 					break;

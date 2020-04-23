@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eb548eb5bf4d267bbb4961de5d0fc55c",
+    "content-hash": "2567968b090ebe5c8f44a1b2c3f94f45",
     "packages": [
         {
             "name": "setasign/fpdi",
@@ -134,16 +134,16 @@
         },
         {
             "name": "tokushima/ebi",
-            "version": "3.2.4",
+            "version": "3.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tokushima/ebi.git",
-                "reference": "df714271d4147c6f7932dd17baab60a291ada52b"
+                "reference": "2cb9d14cda2bc50f3612e8db513033c144c9263c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tokushima/ebi/zipball/df714271d4147c6f7932dd17baab60a291ada52b",
-                "reference": "df714271d4147c6f7932dd17baab60a291ada52b",
+                "url": "https://api.github.com/repos/tokushima/ebi/zipball/2cb9d14cda2bc50f3612e8db513033c144c9263c",
+                "reference": "2cb9d14cda2bc50f3612e8db513033c144c9263c",
                 "shasum": ""
             },
             "require": {
@@ -168,7 +168,7 @@
                     "name": "tokushima"
                 }
             ],
-            "time": "2020-04-05T10:04:40+00:00"
+            "time": "2020-04-21T16:56:48+00:00"
         }
     ],
     "packages-dev": [],
