@@ -2,8 +2,6 @@
 namespace tt\pdf;
 
 class Pdf{
-	static private $work;
-	
 	private $pdf;
 	private $current = 0;
 	private $current_page_size = [0,0];
@@ -14,33 +12,19 @@ class Pdf{
 		$this->pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
 		mb_internal_encoding($mb_internal_encoding);
 		
+		$this->pdf->setPageUnit('mm');
 		$this->pdf->setPrintHeader(false);
 		$this->pdf->setPrintFooter(false);
 		$this->pdf->SetMargins(0,0,0);
-		$this->pdf->setCellPaddings(0,0,0,0);
 		$this->pdf->SetAutoPageBreak(false);
-	}
-	
-	private static function work(){
-		if(!isset(self::$work)){
-			$mb_internal_encoding = mb_internal_encoding();
-			self::$work = new \setasign\Fpdi\Tcpdf\Fpdi();
-			mb_internal_encoding($mb_internal_encoding);
-			
-			self::$work->setPrintHeader(false);
-			self::$work->setPrintFooter(false);
-			self::$work->SetMargins(0,0,0);
-			self::$work->setCellPaddings(0,0,0,0);
-			self::$work->SetAutoPageBreak(false);
-		}
-		return self::$work;
+		$this->pdf->setFontSubsetting(true);
 	}
 	
 	/**
 	 * Defines the author of the document
 	 * @param string $author
 	 */
-	public function author($author){
+	public function set_author($author){
 		$this->pdf->SetAuthor($author);
 	}
 	
@@ -48,9 +32,25 @@ class Pdf{
 	 * Defines the creator of the document
 	 * @param string $creator
 	 */
-	public function creator($creator){
+	public function set_creator($creator){
 		$this->pdf->SetCreator($creator);
 	}
+	
+	/**
+	 * Defines the title of the document
+	 * @param string $title
+	 */
+	public function set_title($title){
+		$this->pdf->SetTitle($title);
+	}
+	/**
+	 * Defines the subject of the document
+	 * @param string $subject
+	 */
+	public function set_subject($subject){
+		$this->pdf->SetSubject($subject);
+	}
+	
 	
 	/**
 	 * ページを追加
@@ -300,7 +300,7 @@ class Pdf{
 	 * ルーラーの表示
 	 * @return $this
 	 */
-	public function ruler(){
+	public function add_ruler(){
 		$w = $this->pdf->getPageWidth();
 		$h = $this->pdf->getPageHeight();
 		
@@ -326,7 +326,7 @@ class Pdf{
 	 * @param number $bleed ドブ幅 mm 
 	 * @param boolean $center センタートンボの表示
 	 */
-	public function trim_mark($x,$y,$w,$h,$mark=9,$bleed=3,$center=true){
+	public function add_trim_mark($x,$y,$w,$h,$mark=9,$bleed=3,$center=true){
 		$this->add_line($x, $y-$bleed, $x, $y-$bleed-$mark);
 		$this->add_line($x, $y-$bleed, $x-$bleed-$mark, $y-$bleed);
 		$this->add_line($x-$bleed, $y, $x-$bleed, $y-$bleed-$mark);
@@ -372,7 +372,7 @@ class Pdf{
 	 *  border_width: number 線の太さ mm
 	 *  dash: number|string 破線パターン 1 or 1,2 mm
 	 */
-	public function crosshair($x,$y,$opt=[]){
+	public function add_crosshair($x,$y,$opt=[]){
 		$this->add_line(0, $y, $this->current_page_size[0], $y,$opt);
 		$this->add_line($x, 0, $x, $this->current_page_size[1],$opt);
 	}
@@ -415,14 +415,14 @@ class Pdf{
 	 * @param number $width mm
 	 * @param number $height mm
 	 * @param string $text
-	 * @param mixed{} $opt 
+	 * @param mixed{} $opt
 	 * 
 	 * opt:
 	 *  align: 0: LEFT, 1: CENTER, 2: RIGHT
 	 *  valign: 0: TOP, 1: MIDDLE, 2: BOTTOM
+	 *  color: #000000
 	 *  font_family: フォントファミリー
 	 *  font_size: フォントサイズ pt
-	 *  color: #000000
 	 *  text_spacing: 文字間隔 pt
 	 *  text_leading: 行間隔 pt
 	 *  angle: 回転角度
@@ -437,98 +437,56 @@ class Pdf{
 		list($width,$height) = $this->xy($width,$height,$x,$y);
 		$this->rotate($x, $y, $opt);
 		
-		$align = $opt['align'] ?? 0;
-		$valign = $opt['valign'] ?? 0;
 		$font_family = $opt['font_family'] ?? 'kozminproregular';
 		$font_size = $opt['font_size'] ?? 8;
 		$color = $opt['color'] ?? '#000000';
 		$text_spacing = $opt['text_spacing'] ?? 0;
-		$text_leading = $opt['text_leading'] ?? 0;
+		$text_leading = $opt['text_leading'] ?? $font_size;
+		$align = $opt['align'] ?? 0;
+		$valign = $opt['valign'] ?? 0;
 		
 		list($r,$g,$b) = [hexdec(substr($color,1,2)),hexdec(substr($color,3,2)),hexdec(substr($color,5,2))];
 		
 		$this->pdf->SetFont($font_family,'',$font_size);
-		$this->pdf->setFontSubsetting(true);
 		$this->pdf->SetTextColor($r,$g,$b);
 		$this->pdf->SetFontSpacing($text_spacing);
+		$this->pdf->setCellPaddings(0,0,0,0);
+		$this->pdf->setCellMargins(0,0,0,0);
+		$this->pdf->setCellHeightRatio($text_leading / $font_size);
 		
-		self::work()->AddPage(($width > $height) ? 'L' : 'P',[$width,$height]);
-		self::work()->SetFontSpacing($text_spacing);
-		
-		$text_h = 0;
-		$lines = [];
-		foreach(explode(PHP_EOL,$text) as $line){
-			$next = '';
-			
-			while(true){
-				$w = $this->pdf->GetStringWidth($line,$font_family,'',$font_size);
-				
-				if($w >= $width){
-					$next = mb_substr($line,-1).$next;
-					$line = mb_substr($line,0,-1);
-				}else{
-					self::work()->Cell(0,0,$line);
-					$h = self::work()->getLastH() + $text_leading;
-					
-					if($text_h + $h > $height){
-						break;
-					}
-					$lines[] = [$line,$w,$h];
-					$text_h += $h;
-					
-					if(empty($next)){
-						break;
-					}
-					$line = $next;
-					$next = '';
-				}
-			}
-			if(!empty($next)){
-				self::work()->Cell(0,0,$next);
-				$h = self::work()->getLastH() + $text_leading;
-				$w = $this->pdf->GetStringWidth($next,$font_family,'',$font_size);
-				
-				if($text_h + $h > $height){
-					break;
-				}
-				$lines[] = [$next,$w,$h];
-				$text_h += $h;
-			}
-		}
-		
-		$ly = 0;
-		if($valign === 1){
-			$ly = ($height - $text_h) / 2;
-		}else if($valign === 2){
-			$ly = ($height - $text_h);
-		}
-		while(!empty($lines)){
-			list($text,$w,$h) = array_shift($lines);
-			
-			$lx = 0;
-			if($align === 1){
-				$lx = ($width - $w) / 2;
-			}else if($align === 2){
-				$lx = ($width - $w) - $text_spacing;
-			}
-			$this->pdf->SetXY($x + $lx,$y + $ly);
-			$this->pdf->Cell(0,0,$text,0,empty($lines) ? 0 : 1);
-			
-			$y = $y + $h;
-		}
-		self::work()->deletePage(self::work()->getPage());
+		$this->pdf->MultiCell(
+			$width,
+			$height,
+			$text,
+			false,
+			($align == 0) ? 'L' : (($align == 1) ? 'C' : 'R'),
+			false,
+			1,
+			$x,
+			$y,
+			true,
+			0,
+			false,
+			false,
+			$height,
+			($valign == 0) ? 'T' : (($valign == 1) ? 'M' : 'B'),
+			false
+		);
 		$this->pdf->StopTransform();
+		
+		if($opt['border'] ?? false || isset($opt['border_width'])){
+			$this->add_rect($x, $y, $width, $height, $opt);
+		}
 		
 		return $this;
 	}
-	
 	
 	/**
 	 * ページの幅
 	 * @param integer $page
 	 * @return number
 	 */
-	public function width($page=null){
+	public function get_width($page=null){
 		return $this->pdf->getPageWidth($page);
 	}
 	
@@ -537,7 +495,7 @@ class Pdf{
 	 * @param integer $page
 	 * @return number
 	 */
-	public function height($page=null){
+	public function get_height($page=null){
 		return $this->pdf->getPageHeight($page);
 	}
 	
@@ -591,7 +549,8 @@ class Pdf{
 	 * @return integer
 	 */
 	public static function get_num_pages($pdffile){
-		return self::set_source(self::work(), $pdffile);
+		$pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
+		return self::set_source($pdf, $pdffile);
 	}
 	
 	/**
@@ -601,10 +560,11 @@ class Pdf{
 	 * @return array
 	 */
 	public static function get_size($pdffile,$page=1){
-		static::set_source(self::work(), $pdffile);
+		$pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
+		static::set_source($pdf, $pdffile);
 		
-		$template_id = self::work()->importPage($page);
-		$info = self::work()->getImportedPageSize($template_id);
+		$template_id = $pdf->importPage($page);
+		$info = $pdf->getImportedPageSize($template_id);
 		
 		return [
 			'width'=>$info['width'],
