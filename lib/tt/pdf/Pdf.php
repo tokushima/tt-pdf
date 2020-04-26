@@ -3,9 +3,6 @@ namespace tt\pdf;
 
 class Pdf{
 	private $pdf;
-	private $current = 0;
-	private $current_page_size = [0,0];
-	private $last_error_file;
 	
 	public function __construct(){
 		$mb_internal_encoding = mb_internal_encoding();
@@ -60,7 +57,6 @@ class Pdf{
 	 */
 	public function add_page($width,$height){
 		$this->pdf->AddPage(($width > $height) ? 'L' : 'P',[$width,$height]);
-		$this->current_page_size = [$width,$height];
 		return $this;
 	}
 	
@@ -76,6 +72,12 @@ class Pdf{
 	 * @param number $x mm
 	 * @param number $y mm
 	 * @param string $filepath
+	 * @param mixed{} $opt
+	 * 
+	 * opt:
+	 *  integer $angle 回転角度
+	 *  integer $dpi DPI
+	 *  
 	 * @throws \ebi\exception\ImageException
 	 * @return $this
 	 */
@@ -105,6 +107,11 @@ class Pdf{
 	 * @param number $width mm
 	 * @param number $height mm
 	 * @param string $filepath
+	 * @param mixed{} $opt
+	 * 
+	 * opt:
+	 *  integer $angle 回転角度
+	 *  
 	 * @return $this
 	 */
 	public function add_svg($x,$y,$width,$height,$filepath,$opt=[]){
@@ -117,17 +124,7 @@ class Pdf{
 		return $this;
 	}
 	
-	/**
-	 * SVG文字列を追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
-	 * @param string $svgstring
-	 * @param array $opt
-	 * @return \tt\pdf\Pdf
-	 */
-	public function add_svg_string($x,$y,$width,$height,$svgstring,$opt=[]){
+	private function add_svg_string($x,$y,$width,$height,$svgstring,$opt=[]){
 		list($x,$y) = $this->xy($x,$y);
 		$this->rotate($x, $y, $opt);
 		
@@ -141,7 +138,12 @@ class Pdf{
 	 * PDFを追加
 	 * @param number $x mm
 	 * @param number $y mm
-	 * @param string $file
+	 * @param string $filepath
+	 * @param mixed{} $opt
+	 * 
+	 * opt:
+	 *  integer $angle 回転角度
+	 *  
 	 * @throws \ebi\exception\AccessDeniedException
 	 * @return $this
 	 */
@@ -168,9 +170,9 @@ class Pdf{
 	 * @param mixed{} $opt 
 	 * 
 	 * opt:
-	 *  border_color: string 線の色 #FFFFFF
-	 *  border_width: number 線の太さ mm
-	 *  dash: number|string 破線パターン 1 or 1,2 mm
+	 *  string $border_color 線の色 #FFFFFF
+	 *  number $border_width 線の太さ mm
+	 *  string $dash 破線パターン 1 or 1,2 mm
 	 *  
 	 * @return $this
 	 */
@@ -205,16 +207,16 @@ class Pdf{
 	 * @param number $y mm
 	 * @param number $w mm
 	 * @param number $h mm
-	 * @param mixed{} $opt 
+	 * @param mixed{} $opt
 	 * 
-	 * style:
-	 *  fill: boolean true: 塗りつぶす
-	 *  color: string 色 #000000 
-	 *  border_color: string 線の色 #FFFFFF
-	 *  border_width: number 線の太さ mm
-	 *  dash: number|string 破線パターン 1 or 1,2 mm
+	 * opt:
+	 *  boolean $fill true: 塗りつぶす
+	 *  string $color 色 #000000 
+	 *  string $border_color 線の色 #FFFFFF
+	 *  number $border_width 線の太さ mm
+	 *  string $dash 破線パターン 1 or 1,2 mm
 	 * 
-	 * @return \tt\pdf\Pdf
+	 * @return $this
 	 */
 	public function add_rect($x,$y,$w,$h,$opt=[]){
 		$style = ($opt['fill'] ?? false) ? 'F' : 'D';
@@ -252,14 +254,14 @@ class Pdf{
 	 * @param number $diameter 直径 mm
 	 * @param mixed{} $opt 
 	 * 
-	 * style:
-	 *  fill: boolean true: 塗りつぶす
-	 *  color: string 色 #000000 
-	 *  border_color: string 線の色 #FFFFFF
-	 *  border_width: number 線の太さ mm
-	 *  dash: number|string 破線パターン 1 or 1,2 mm
+	 * opt:
+	 *  boolean $fill true: 塗りつぶす
+	 *  string $color 色 #000000 
+	 *  string $border_color 線の色 #FFFFFF
+	 *  number $border_width 線の太さ mm
+	 *  string $dash 破線パターン 1 or 1,2 mm
 	 * 
-	 * @return \tt\pdf\Pdf
+	 * @return $this
 	 */
 	public function add_circle($x,$y,$diameter,$opt=[]){
 		$style = ($opt['fill'] ?? false) ? 'F' : 'D';
@@ -280,7 +282,6 @@ class Pdf{
 				'color'=>$border_rgb,
 				'dash'=>$border_dash,
 			];
-			
 			if($style === 'F'){
 				$style = 'FD';
 			}
@@ -295,9 +296,103 @@ class Pdf{
 		return $this;
 	}
 	
+	/**
+	 * QR Code を追加
+	 * @param number $x mm
+	 * @param number $y mm
+	 * @param number $width mm
+	 * @param string $value
+	 * @param mixed{} $opt
+	 *
+	 * opt:
+	 *  string $color #000000
+	 *  string $bgcolor #FFFFFF
+	 *  number $padding (cell)
+	 *  string $level L, M, Q, H (error correction level)
+	 *  integer $angle 回転角度
+	 *  
+	 * @return $this
+	 */
+	public function add_qrcode($x,$y,$width,$value,$opt=[]){
+		$type = 'QRCODE';
+		$st = [
+			'padding'=>($opt['padding']) ?? 'auto'
+		];
+		if(isset($opt['bgcolor'])){
+			$st['bgcolor'] = $this->color2rgb($opt['bgcolor']);
+		}
+		if(isset($opt['color'])){
+			$st['fgcolor'] = $this->color2rgb($opt['color']);
+		}
+		if(isset($opt['level'])){
+			$type = $type.','.$opt['level'];
+		}
+		
+		$this->rotate($x, $y, $opt);
+		$this->pdf->write2DBarcode($value,$type,$x,$y,$width,$width,$st);
+		$this->pdf->StopTransform();
+		
+		return $this;
+	}
 	
 	/**
-	 * ルーラーの表示
+	 * JAN13バーコードを追加
+	 * @param number $x mm
+	 * @param number $y mm
+	 * @param number $width mm
+	 * @param number $height mm
+	 * @param string $code
+	 * @param mixed{} $opt
+	 * 
+	 * 	string $color #000000
+	 * 	number $bar_height バーコードの高さ
+	 * 	number $module_width 1モジュールの幅
+	 *  boolean $show_text コード文字列を表示する
+	 * 	number $font_size フォントサイズ
+	 * 	string $font_family フォント名
+	 *  integer $angle 回転角度
+	 */
+	public function add_jan13($x,$y,$width,$height,$code,$opt=[]){
+		$this->add_svg_string(
+			$x,
+			$y,
+			$width,
+			$height,
+			\ebi\Barcode::JAN13($code,$opt),
+			$opt
+		);
+	}
+	
+	/**
+	 * NW-7 (CODABAR)を追加
+	 * @param number $x mm
+	 * @param number $y mm
+	 * @param number $width mm
+	 * @param number $height mm
+	 * @param string $code
+	 * @param mixed{} $opt
+	 *
+	 * 	string $color #000000
+	 * 	number $bar_height バーコードの高さ
+	 * 	number $module_width 1モジュールの幅
+	 *  boolean $show_text コード文字列を表示する
+	 * 	number $font_size フォントサイズ
+	 * 	string $font_family フォント名
+	 *  integer $angle 回転角度
+	 */
+	public function add_nw7($x,$y,$width,$height,$code,$opt=[]){
+		$this->add_svg_string(
+			$x,
+			$y,
+			$width,
+			$height,
+			\ebi\Barcode::NW7($code,$opt),
+			$opt
+		);
+	}
+	
+	/**
+	 * ルーラーの追加
 	 * @return $this
 	 */
 	public function add_ruler(){
@@ -317,7 +412,7 @@ class Pdf{
 	}
 	
 	/**
-	 * トンボ
+	 * トンボの追加
 	 * @param number $x mm
 	 * @param number $y mm
 	 * @param number $w mm
@@ -362,21 +457,6 @@ class Pdf{
 		}
 	}
 	
-	/**
-	 * 十字線
-	 * @param number $x
-	 * @param number $y
-	 * 
-	 * opt:
-	 *  border_color: string 線の色 #FFFFFF
-	 *  border_width: number 線の太さ mm
-	 *  dash: number|string 破線パターン 1 or 1,2 mm
-	 */
-	public function add_crosshair($x,$y,$opt=[]){
-		$this->add_line(0, $y, $this->current_page_size[0], $y,$opt);
-		$this->add_line($x, 0, $x, $this->current_page_size[1],$opt);
-	}
-	
 	private function xy($x,$y,$dx=0,$dy=0){
 		if($x < 0){
 			$x = $this->pdf->getPageWidth() + $x - $dx;
@@ -409,7 +489,7 @@ class Pdf{
 	}
 	
 	/**
-	 * テキストボックス
+	 * テキストボックスの追加
 	 * @param number $x mm
 	 * @param number $y mm
 	 * @param number $width mm
@@ -418,14 +498,14 @@ class Pdf{
 	 * @param mixed{} $opt
 	 * 
 	 * opt:
-	 *  align: 0: LEFT, 1: CENTER, 2: RIGHT
-	 *  valign: 0: TOP, 1: MIDDLE, 2: BOTTOM
-	 *  color: #000000
-	 *  font_family: フォントファミリー
-	 *  font_size: フォントサイズ pt
-	 *  text_spacing: 文字間隔 pt
-	 *  text_leading: 行間隔 pt
-	 *  angle: 回転角度
+	 *  integer $align 0: LEFT, 1: CENTER, 2: RIGHT
+	 *  integer $valign 0: TOP, 1: MIDDLE, 2: BOTTOM
+	 *  string $color #000000
+	 *  string $font_family フォントファミリー
+	 *  number $font_size フォントサイズ pt
+	 *  number $text_spacing 文字間隔 pt
+	 *  number $text_leading 行間隔 pt
+	 *  integer $angle 回転角度
 	 *  
 	 * フォントの追加 (埋め込み型):
 	 *  > vendor/tecnickcom/tcpdf/tools/tcpdf_addfont.php -t TrueTypeUnicode -f 32 -i *****.ttf
@@ -536,7 +616,7 @@ class Pdf{
 	 * PDFバージョンを設定する
 	 * 
 	 * @param number $version
-	 * @return \tt\pdf\Pdf
+	 * @return $this
 	 */
 	public function set_version($version){
 		$this->pdf->setPDFVersion($version);
@@ -557,7 +637,7 @@ class Pdf{
 	 * ページサイズ mm
 	 * @param string $pdffile
 	 * @param number $page
-	 * @return array
+	 * @return number{}
 	 */
 	public static function get_size($pdffile,$page=1){
 		$pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
@@ -615,5 +695,22 @@ class Pdf{
 			}
 			yield $page=>$self;
 		}
+	}
+	
+	/**
+	 * 利用可能フォントリスト
+	 * @return string[]
+	 */
+	public static function font_list(){
+		new \setasign\Fpdi\Tcpdf\Fpdi();
+		
+		$fonts = [];
+		$ref = new \ReflectionClass('Tcpdf');
+		foreach(\ebi\Util::ls(dirname($ref->getFileName()).'/fonts') as $file){
+			$fonts[preg_replace('/^(.+?)\..+$/','\\1',$file->getFilename())] = true;
+		}
+		ksort($fonts);
+		
+		return array_keys($fonts);
 	}
 }
