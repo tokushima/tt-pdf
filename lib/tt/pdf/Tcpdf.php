@@ -1,12 +1,16 @@
 <?php
 namespace tt\pdf;
-
-class Pdf{
+/**
+ * Tcpdf(Fpdi)
+ * @author tokushima
+ *
+ */
+class Tcpdf{
 	private $pdf;
 	private $k100 = false;
 	private $font_names = [];
 	
-	public function __construct(){
+	public function __construct($version=null){
 		$mb_internal_encoding = mb_internal_encoding();
 		$this->pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
 		mb_internal_encoding($mb_internal_encoding);
@@ -17,6 +21,10 @@ class Pdf{
 		$this->pdf->SetMargins(0,0,0);
 		$this->pdf->SetAutoPageBreak(false);
 		$this->pdf->setFontSubsetting(true);
+		
+		if(!empty($version)){
+			$this->pdf->setPDFVersion($version);
+		}
 	}
 	
 	/**
@@ -30,15 +38,33 @@ class Pdf{
 	}
 	
 	/**
-	 * フォント名のエイリアスを設定
-	 * @param array $font_names [alias=>name]
+	 * フォントを追加する
+	 * @param string $fontfile フォントファイル (***.php)
+	 * @param string $alias 
+	 * 
+	 * フォントファイルの生成:
+	 *  > vendor/tecnickcom/tcpdf/tools/tcpdf_addfont.php -t TrueTypeUnicode -f 32 -i *****.ttf -o [OUTDIR]
+	 *  -t: TrueTypeUnicode, TrueType, Type1, CID0JP, CID0KR, CID0CS, CID0CT
+	 *  
 	 * @return $this
 	 */
-	public function set_font_alias(array $font_names){
-		$this->font_names = array_merge($this->font_names,$font_names);
+	public function add_font($fontfile,$alias=null){
+		if(substr($fontfile,-4) !== '.php'){
+			$path = realpath($fontfile);
+			if($path === false){
+				throw \ebi\exception\AccessDeniedException($fontfile.' not found');
+			}
+			$dir = dirname($path);
+			$fontfile = (($dir !== '/') ? $dir : '').'/'.
+				strtolower(
+					preg_replace('/[^\w]/','',preg_replace('/^(.+)\.\w+$/','\\1',basename($fontfile)))
+				).'.php';
+		}
+		$alias = empty($alias) ? preg_replace('/^(.+?)\.$/','\\1',$fontfile) : $alias;
+		$this->pdf->AddFont($alias,null,$fontfile);
+		
 		return $this;
 	}
-	
 	
 	/**
 	 * Defines the author of the document
@@ -302,6 +328,7 @@ class Pdf{
 			'color'=>$border_rgb,
 		];
 		$this->pdf->Ellipse($x, $y, $r,'',0,0,360,$style,$border_style,$color_rgb);
+		
 		return $this;
 	}
 	
@@ -323,24 +350,21 @@ class Pdf{
 	 * @return $this
 	 */
 	public function add_qrcode($x,$y,$width,$value,$opt=[]){
-		$type = 'QRCODE';
-		$st = [
-			'padding'=>($opt['padding']) ?? 'auto'
-		];
-		if(isset($opt['bgcolor'])){
-			$st['bgcolor'] = $this->color_dec($opt['bgcolor']);
-		}
-		if(isset($opt['color'])){
-			$st['fgcolor'] = $this->color_dec($opt['color']);
-		}
-		if(isset($opt['level'])){
-			$type = $type.','.$opt['level'];
-		}
+		$renderer = new \BaconQrCode\Renderer\ImageRenderer(
+			new \BaconQrCode\Renderer\RendererStyle\RendererStyle(400),
+			new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+		);
+		$writer = new \BaconQrCode\Writer($renderer);
+		$writer->writeString($value);
 		
-		$this->rotate($x, $y, $opt);
-		$this->pdf->write2DBarcode($value,$type,$x,$y,$width,$width,$st);
-		$this->pdf->StopTransform();
-		
+		$this->add_svg_string(
+			$x,
+			$y,
+			$width,
+			$width,
+			$writer->writeString($value),
+			$opt
+		);
 		return $this;
 	}
 	
@@ -515,9 +539,6 @@ class Pdf{
 	 *  number $text_leading 行間隔 pt
 	 *  integer $angle 回転角度
 	 *  
-	 * フォントの追加 (埋め込み型):
-	 *  > vendor/tecnickcom/tcpdf/tools/tcpdf_addfont.php -t TrueTypeUnicode -f 32 -i *****.ttf
-	 *  -t: TrueTypeUnicode, TrueType, Type1, CID0JP, CID0KR, CID0CS, CID0CT
 	 * @return $this
 	 */
 	public function add_textbox($x,$y,$width,$height,$text,$opt=[]){
@@ -539,8 +560,8 @@ class Pdf{
 		$color_dec = $this->color_dec($color_code);
 		$this->pdf->SetTextColor($color_dec[0],$color_dec[1],$color_dec[2]);
 		
-		$this->pdf->setCellPaddings(0,0,0,0);
-		$this->pdf->setCellMargins(0,0,0,0);
+ 		$this->pdf->setCellPaddings(0,0,0,0);
+ 		$this->pdf->setCellMargins(0,0,0,0);
 		$this->pdf->setCellHeightRatio($text_leading / $font_size);
 		
 		$this->pdf->MultiCell(
@@ -568,24 +589,6 @@ class Pdf{
 		}
 		
 		return $this;
-	}
-	
-	/**
-	 * ページの幅
-	 * @param integer $page
-	 * @return number
-	 */
-	public function get_width($page=null){
-		return $this->pdf->getPageWidth($page);
-	}
-	
-	/**
-	 * ページの高さ
-	 * @param integer $page
-	 * @return number
-	 */
-	public function get_height($page=null){
-		return $this->pdf->getPageHeight($page);
 	}
 	
 	/**
@@ -622,51 +625,31 @@ class Pdf{
 	}
 	
 	/**
-	 * PDFバージョンを設定する
-	 * 
-	 * @param number $version
-	 * @return $this
-	 */
-	public function set_version($version){
-		$this->pdf->setPDFVersion($version);
-		return $this;
-	}
-	
-	/**
-	 * 総ページ数を取得
-	 * @param string $pdffile
-	 * @return integer
-	 */
-	public static function get_num_pages($pdffile){
-		$pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
-		return self::set_source($pdf, $pdffile);
-	}
-	
-	/**
 	 * ページサイズ mm
 	 * @param string $pdffile
-	 * @param number $page
-	 * @return number{}
+	 * @return array [page=>[width,height]]
 	 */
-	public static function get_size($pdffile,$page=1){
+	public static function get_page_size($pdffile){
 		$pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
-		static::set_source($pdf, $pdffile);
+		$page_size = [];
 		
-		$template_id = $pdf->importPage($page);
-		$info = $pdf->getImportedPageSize($template_id);
-		
-		return [
-			'width'=>$info['width'],
-			'height'=>$info['height'],
-		];
+		for($page=1;$page<=self::set_source($pdf, $pdffile);$page++){
+			$template_id = $pdf->importPage($page);
+			$size = $pdf->getImportedPageSize($template_id);
+			
+			$page_size[$page] = [$size['width'],$size['height']];
+		}
+		return $page_size;
 	}
 	
-	private static function set_source($pdf,$pdffile){
+	private static function set_source(\setasign\Fpdi\Tcpdf\Fpdi $pdf,$pdffile){
 		try{
 			return $pdf->setSourceFile($pdffile);
 		}catch(\setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException $e){
 			if($e->getCode() === \setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException::ENCRYPTED){
 				throw new \tt\pdf\exception\EncryptedPdfDocumentException();
+			}else if($e->getCode() === \setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException::COMPRESSED_XREF){
+				throw new \tt\pdf\exception\CompressionDocumentException();
 			}
 			throw $e;
 		}catch(\Exception $e){
@@ -682,7 +665,8 @@ class Pdf{
 	 * @throws \ebi\exception\AccessDeniedException
 	 */
 	public static function split($pdffile,$start=1,$end=null,$pdfversion=null){
-		$num_pages = self::get_num_pages($pdffile);
+		$page_size = self::get_page_size($pdffile);
+		$num_pages = sizeof($page_size);
 		
 		if(empty($start)){
 			$start = 1;
@@ -691,35 +675,16 @@ class Pdf{
 			$end = $num_pages;
 		}
 		for($page=$start;$page<=$end;$page++){
-			$self = new static();
-			$self->pdf->setSourceFile($pdffile);
+			$self = new static($pdfversion);
+			
+			self::set_source($self->pdf, $pdffile);
 			$template_id = $self->pdf->importPage($page);
 			$info = $self->pdf->getImportedPageSize($template_id);
 			
 			$self->add_page($info['width'],$info['height']);
 			$self->pdf->useTemplate($template_id);
 			
-			if(!empty($pdfversion)){
-				$self->pdf->setPDFVersion($pdfversion);
-			}
 			yield $page=>$self;
 		}
-	}
-	
-	/**
-	 * 利用可能フォントリスト
-	 * @return string[]
-	 */
-	public static function font_list(){
-		new \setasign\Fpdi\Tcpdf\Fpdi();
-		
-		$fonts = [];
-		$ref = new \ReflectionClass('Tcpdf');
-		foreach(\ebi\Util::ls(dirname($ref->getFileName()).'/fonts') as $file){
-			$fonts[preg_replace('/^(.+?)\..+$/','\\1',$file->getFilename())] = true;
-		}
-		ksort($fonts);
-		
-		return array_keys($fonts);
 	}
 }
