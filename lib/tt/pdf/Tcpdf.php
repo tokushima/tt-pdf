@@ -206,8 +206,9 @@ class Tcpdf{
 		}
 		$this->rotate($x, $y, $opt);
 		
-		$this->pdf->setSourceFile($filepath);
-		$this->pdf->useTemplate($this->pdf->importPage(1),$x,$y,$opt['width'] ?? null,$opt['height'] ?? null);
+		self::set_source($this->pdf, $filepath);
+		$template_id = $this->pdf->importPage(1);
+		$this->pdf->useTemplate($template_id,$x,$y,$opt['width'] ?? null,$opt['height'] ?? null);
 		
 		$this->pdf->StopTransform();
 		return $this;
