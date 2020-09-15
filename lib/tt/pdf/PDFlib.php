@@ -49,10 +49,6 @@ class PDFlib{
 		}
 	}
 	
-	public function __destruct(){
-		$this->pdf->delete();
-	}
-	
 	/**
 	 * #000000をK100とする
 	 * @param boolean $boolean
