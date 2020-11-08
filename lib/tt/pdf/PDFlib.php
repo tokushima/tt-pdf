@@ -254,6 +254,7 @@ class PDFlib{
 	 *
 	 * opt:
 	 *  integer $angle 回転角度
+	 *  number $scale 拡大率
 	 *
 	 * @throws \ebi\exception\AccessDeniedException
 	 * @return $this
@@ -267,14 +268,18 @@ class PDFlib{
 		$doc_id = $this->load_pdf($filepath);
 		$image = $this->pdf->open_pdi_page($doc_id,1,''); // 1ページ目を取得
 		$angle = $opt['rotate'] ?? ($opt['angle'] ?? 0);
+		$scale = $opt['scale'] ?? ($opt['scale'] ?? 0);
 		
 		$width_pt = $this->pdf->info_pdi_page($image,'width','');
 		$height_pt = $this->pdf->info_pdi_page($image,'height','');
 		
-		$image_opt = sprintf(
-			'rotate=%s ',
-			$this->rotate2world($angle)
-		);
+		$image_opt = '';
+		if(!empty($angle)){
+			$image_opt = sprintf('rotate=%s ',$this->rotate2world($angle));
+		}
+		if(!empty($scale)){
+			$image_opt = sprintf('scale=%s ',$scale);
+		}
 		
 		list($disp_x,$disp_y) = $this->disp($x, $y, $width_pt, $height_pt, $angle);
 		$this->pdf->fit_pdi_page($image,$disp_x,$disp_y,$image_opt);
