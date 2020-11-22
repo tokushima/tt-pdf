@@ -53,25 +53,29 @@
             ],
             "description": "BaconQrCode is a QR code generator for PHP.",
             "homepage": "https://github.com/Bacon/BaconQrCode",
+            "support": {
+                "issues": "https://github.com/Bacon/BaconQrCode/issues",
+                "source": "https://github.com/Bacon/BaconQrCode/tree/feature/rewrite"
+            },
             "time": "2018-04-25T17:53:56+00:00"
         },
         {
             "name": "dasprid/enum",
-            "version": "1.0.0",
+            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DASPRiD/Enum.git",
-                "reference": "631ef6e638e9494b0310837fa531bedd908fc22b"
+                "reference": "5abf82f213618696dda8e3bf6f64dd042d8542b2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DASPRiD/Enum/zipball/631ef6e638e9494b0310837fa531bedd908fc22b",
-                "reference": "631ef6e638e9494b0310837fa531bedd908fc22b",
+                "url": "https://api.github.com/repos/DASPRiD/Enum/zipball/5abf82f213618696dda8e3bf6f64dd042d8542b2",
+                "reference": "5abf82f213618696dda8e3bf6f64dd042d8542b2",
                 "shasum": ""
             },
             "require-dev": {
-                "phpunit/phpunit": "^6.4",
-                "squizlabs/php_codesniffer": "^3.1"
+                "phpunit/phpunit": "^7 | ^8 | ^9",
+                "squizlabs/php_codesniffer": "^3.4"
             },
             "type": "library",
             "autoload": {
@@ -87,7 +91,8 @@
                 {
                     "name": "Ben Scholzen 'DASPRiD'",
                     "email": "mail@dasprids.de",
-                    "homepage": "https://dasprids.de/"
+                    "homepage": "https://dasprids.de/",
+                    "role": "Developer"
                 }
             ],
             "description": "PHP 7.1 enum implementation",
@@ -95,7 +100,11 @@
                 "enum",
                 "map"
             ],
-            "time": "2017-10-25T22:45:27+00:00"
+            "support": {
+                "issues": "https://github.com/DASPRiD/Enum/issues",
+                "source": "https://github.com/DASPRiD/Enum/tree/1.0.3"
+            },
+            "time": "2020-10-02T16:03:48+00:00"
         },
         {
             "name": "setasign/fpdi",
@@ -159,6 +168,10 @@
                 "fpdi",
                 "pdf"
             ],
+            "support": {
+                "issues": "https://github.com/Setasign/FPDI/issues",
+                "source": "https://github.com/Setasign/FPDI/tree/master"
+            },
             "time": "2020-02-19T11:30:55+00:00"
         },
         {
@@ -221,20 +234,24 @@
                 "pdf417",
                 "qrcode"
             ],
+            "support": {
+                "issues": "https://github.com/tecnickcom/TCPDF/issues",
+                "source": "https://github.com/tecnickcom/TCPDF/tree/6.3.5"
+            },
             "time": "2020-02-14T14:20:12+00:00"
         },
         {
             "name": "tokushima/ebi",
-            "version": "3.2.7",
+            "version": "3.2.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tokushima/ebi.git",
-                "reference": "dd486bbada2b770243984300e567410faf43720e"
+                "reference": "5a31f13a0eb6c7d9f0d964aef59a2a8a88a6ba1f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tokushima/ebi/zipball/dd486bbada2b770243984300e567410faf43720e",
-                "reference": "dd486bbada2b770243984300e567410faf43720e",
+                "url": "https://api.github.com/repos/tokushima/ebi/zipball/5a31f13a0eb6c7d9f0d964aef59a2a8a88a6ba1f",
+                "reference": "5a31f13a0eb6c7d9f0d964aef59a2a8a88a6ba1f",
                 "shasum": ""
             },
             "require": {
@@ -259,7 +276,10 @@
                     "name": "tokushima"
                 }
             ],
-            "time": "2020-05-09T15:56:44+00:00"
+            "support": {
+                "source": "https://github.com/tokushima/ebi/tree/3.2.15"
+            },
+            "time": "2020-09-30T10:56:52+00:00"
         }
     ],
     "packages-dev": [],
@@ -269,5 +289,6 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "2.0.0"
 }

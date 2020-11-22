@@ -279,6 +279,8 @@ class PDFlib{
 		}
 		if(!empty($scale)){
 			$image_opt = sprintf('scale=%s ',$scale);
+			$width_pt *= $scale;
+			$height_pt *= $scale;
 		}
 		
 		list($disp_x,$disp_y) = $this->disp($x, $y, $width_pt, $height_pt, $angle);
