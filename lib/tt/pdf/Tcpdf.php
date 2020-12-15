@@ -196,6 +196,8 @@ class Tcpdf{
 	 * 
 	 * opt:
 	 *  integer $angle 回転角度
+	 *  number $scale 拡大率
+	 *  integer $page_no 追加するページ番号
 	 *  
 	 * @throws \ebi\exception\AccessDeniedException
 	 * @return $this
@@ -206,9 +208,18 @@ class Tcpdf{
 		}
 		$this->rotate($x, $y, $opt);
 		
+		$width_pt = $height_pt = null;
+		$scale = $opt['scale'] ?? 0;
+		$page_no = $opt['page_no'] ?? 1;
 		self::set_source($this->pdf, $filepath);
-		$template_id = $this->pdf->importPage(1);
-		$this->pdf->useTemplate($template_id,$x,$y,$opt['width'] ?? null,$opt['height'] ?? null);
+		$template_id = $this->pdf->importPage($page_no);
+
+		if(!empty($scale)){
+			$size = $this->pdf->getImportedPageSize($template_id);
+			$width_pt = $size['width'] * $scale;
+			$height_pt = $size['height'] * $scale;
+		}
+		$this->pdf->useTemplate($template_id,$x,$y,$width_pt,$height_pt);
 		
 		$this->pdf->StopTransform();
 		return $this;

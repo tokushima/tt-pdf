@@ -255,6 +255,7 @@ class PDFlib{
 	 * opt:
 	 *  integer $angle 回転角度
 	 *  number $scale 拡大率
+	 *  integer $page_no 追加するページ番号
 	 *
 	 * @throws \ebi\exception\AccessDeniedException
 	 * @return $this
@@ -265,10 +266,12 @@ class PDFlib{
 		}
 		list($x,$y) = $this->mm2pt($x,$y);
 		
-		$doc_id = $this->load_pdf($filepath);
-		$image = $this->pdf->open_pdi_page($doc_id,1,''); // 1ページ目を取得
 		$angle = $opt['rotate'] ?? ($opt['angle'] ?? 0);
-		$scale = $opt['scale'] ?? ($opt['scale'] ?? 0);
+		$scale = $opt['scale'] ?? 0;
+		$page_no = $opt['page_no'] ?? 1;
+
+		$doc_id = $this->load_pdf($filepath);
+		$image = $this->pdf->open_pdi_page($doc_id,$page_no,'');
 		
 		$width_pt = $this->pdf->info_pdi_page($image,'width','');
 		$height_pt = $this->pdf->info_pdi_page($image,'height','');
