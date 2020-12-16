@@ -236,23 +236,29 @@ class Tcpdf{
 	 * opt:
 	 *  string $border_color 線の色 #FFFFFF
 	 *  number $border_width 線の太さ mm
+	 *  number[] $dash 点線の長さ [5,2]
 	 *  
 	 * @return $this
 	 */
 	public function add_line($sx,$sy,$ex,$ey,$opt=[]){
 		$border_width = $opt['border_width'] ?? 0.2;
 		$border_color = $this->color_dec($opt['border_color'] ?? ($opt['color'] ?? '#000000'));
-		
-		$this->pdf->SetLineStyle([
+		$style = [
 			'width'=>$border_width,
 			'color'=>$border_color,
-		]);
+		];
+		
+		if(isset($opt['dash']) && is_array($opt['dash'])){
+			$style['dash'] = implode(',',$opt['dash']);
+		}
+		$this->pdf->SetLineStyle($style);
 		$this->pdf->Line($sx,$sy,$ex,$ey);
 		
 		// reset
 		$this->pdf->SetLineStyle([
 			'width'=>0.2,
 			'color'=>$this->color_dec('#000000'),
+			'dash'=>0,
 		]);
 		
 		return $this;
@@ -466,44 +472,43 @@ class Tcpdf{
 	 * @param number $y mm
 	 * @param number $w mm
 	 * @param number $h mm 
-	 * @param number $mark 角トンボの長さ mm 
-	 * @param number $bleed ドブ幅 mm 
+	 * @param number $mark トンボの長さ mm 
 	 * @param boolean $center センタートンボの表示
 	 * @return $this
 	 */
-	public function add_trim_mark($x,$y,$w,$h,$mark=9,$bleed=3,$center=true){
-		$this->add_line($x, $y-$bleed, $x, $y-$bleed-$mark);
-		$this->add_line($x, $y-$bleed, $x-$bleed-$mark, $y-$bleed);
-		$this->add_line($x-$bleed, $y, $x-$bleed, $y-$bleed-$mark);
-		$this->add_line($x-$bleed, $y, $x-$bleed-$mark, $y);
+	public function add_trim_mark($x,$y,$w,$h,$mark=3,$center=false){
+		$this->add_line($x, $y, $x, $y-$mark);
+		$this->add_line($x, $y, $x-$mark, $y);
+		$this->add_line($x, $y, $x, $y-$mark);
+		$this->add_line($x, $y, $x-$mark, $y);
 		
-		$this->add_line($x+$w, $y-$bleed, $x+$w, $y-$bleed-$mark);
-		$this->add_line($x+$w, $y-$bleed, $x+$w+$bleed+$mark, $y-$bleed);
-		$this->add_line($x+$w+$bleed, $y, $x+$w+$bleed, $y-$bleed-$mark);
-		$this->add_line($x+$w+$bleed, $y, $x+$w+$bleed+$mark, $y);
+		$this->add_line($x+$w, $y, $x+$w, $y-$mark);
+		$this->add_line($x+$w, $y, $x+$w+$mark, $y);
+		$this->add_line($x+$w, $y, $x+$w, $y-$mark);
+		$this->add_line($x+$w, $y, $x+$w+$mark, $y);
 		
-		$this->add_line($x, $y+$h+$bleed, $x, $y+$h+$bleed+$mark);
-		$this->add_line($x, $y+$h+$bleed, $x-$bleed-$mark, $y+$h+$bleed);
-		$this->add_line($x-$bleed, $y+$h, $x-$bleed, $y+$h+$bleed+$mark);
-		$this->add_line($x-$bleed, $y+$h, $x-$bleed-$mark, $y+$h);
+		$this->add_line($x, $y+$h, $x, $y+$h+$mark);
+		$this->add_line($x, $y+$h, $x-$mark, $y+$h);
+		$this->add_line($x, $y+$h, $x, $y+$h+$mark);
+		$this->add_line($x, $y+$h, $x-$mark, $y+$h);
 		
-		$this->add_line($x+$w, $y+$h+$bleed, $x+$w, $y+$h+$bleed+$mark);
-		$this->add_line($x+$w, $y+$h+$bleed, $x+$w+$bleed+$mark, $y+$h+$bleed);
-		$this->add_line($x+$w+$bleed, $y+$h, $x+$w+$bleed, $y+$h+$bleed+$mark);
-		$this->add_line($x+$w+$bleed, $y+$h, $x+$w+$bleed+$mark, $y+$h);
+		$this->add_line($x+$w, $y+$h, $x+$w, $y+$h+$mark);
+		$this->add_line($x+$w, $y+$h, $x+$w+$mark, $y+$h);
+		$this->add_line($x+$w, $y+$h, $x+$w, $y+$h+$mark);
+		$this->add_line($x+$w, $y+$h, $x+$w+$mark, $y+$h);
 		
 		if($center){
-			$this->add_line($x-($bleed*2), $y+($h/2)-($h/6), $x-($bleed*2), $y+($h/2)+($h/6));
-			$this->add_line($x-($bleed*2)+1, $y+($h/2), $x-($bleed*2)-$bleed, $y+($h/2));
+			$this->add_line($x, $y+($h/2)-($h/6), $x, $y+($h/2)+($h/6));
+			$this->add_line($x+1, $y+($h/2), $x, $y+($h/2));
 			
-			$this->add_line($x+$w+($bleed*2), $y+($h/2)-($h/6), $x+$w+($bleed*2), $y+($h/2)+($h/6));
-			$this->add_line($x+$w+($bleed*2)-1, $y+($h/2), $x+$w+($bleed*2)+$bleed, $y+($h/2));
+			$this->add_line($x+$w, $y+($h/2)-($h/6), $x+$w, $y+($h/2)+($h/6));
+			$this->add_line($x+$w-1, $y+($h/2), $x+$w, $y+($h/2));
 			
-			$this->add_line($x+($w/2)-($w/6), $y-($bleed*2), $x+($w/2)+($w/6), $y-($bleed*2));
-			$this->add_line($x+($w/2), $y-($bleed*2)+1, $x+($w/2), $y-($bleed*2)-$bleed);
+			$this->add_line($x+($w/2)-($w/6), $y, $x+($w/2)+($w/6), $y);
+			$this->add_line($x+($w/2), $y+1, $x+($w/2), $y);
 			
-			$this->add_line($x+($w/2)-($w/6),$y+$h+($bleed*2),$x+($w/2)+($w/6),$y+$h+($bleed*2));
-			$this->add_line($x+($w/2), $y+$h+($bleed*2)-1, $x+($w/2), $y+$h+($bleed*2)+$bleed);
+			$this->add_line($x+($w/2)-($w/6),$y+$h,$x+($w/2)+($w/6),$y+$h);
+			$this->add_line($x+($w/2), $y+$h-1, $x+($w/2), $y+$h);
 		}
 		return $this;
 	}
@@ -514,6 +519,14 @@ class Tcpdf{
 	 * @return integer[] R,G,B
 	 */
 	private function color_dec($color_code){
+		if(is_array($color_code)){
+			return [
+				((float)$color_code[0] ?? 0) * 100,
+				((float)$color_code[1] ?? 0) * 100,
+				((float)$color_code[2] ?? 0) * 100,
+				((float)$color_code[3] ?? 0) * 100
+			];
+		}
 		if(substr($color_code,0,1) == '#'){
 			$color_code = substr($color_code,1);
 		}
