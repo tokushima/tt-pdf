@@ -319,7 +319,7 @@ class PDFlib{
 	 * opt:
 	 *  string $border_color 線の色 #FFFFFF
 	 *  number $border_width 線の太さ mm
-	 *  number[] $dash 点線の長さ [5,2]
+	 *  number[] $dash 点線の長さ [5,2] mm
 	 *
 	 * @return $this
 	 */
@@ -335,7 +335,7 @@ class PDFlib{
 		$this->pdf->setlinewidth(\ebi\Calc::mm2pt($border_width ?? 0.2));
 
 		if(isset($opt['dash']) && is_array($opt['dash'])){
-			$this->pdf->set_graphics_option('dasharray={'.implode(' ',$opt['dash']).'}');
+			$this->pdf->set_graphics_option('dasharray={'.implode(' ',$this->mm2pt($opt['dash'])).'}');
 		}
 		
 		$this->pdf->moveto($sx,$this->current_page_size[1] - $sy);

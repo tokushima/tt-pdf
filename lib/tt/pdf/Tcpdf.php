@@ -236,7 +236,7 @@ class Tcpdf{
 	 * opt:
 	 *  string $border_color 線の色 #FFFFFF
 	 *  number $border_width 線の太さ mm
-	 *  number[] $dash 点線の長さ [5,2]
+	 *  number[] $dash 点線の長さ [5,2] mm
 	 *  
 	 * @return $this
 	 */
@@ -247,7 +247,7 @@ class Tcpdf{
 			'width'=>$border_width,
 			'color'=>$border_color,
 		];
-		
+
 		if(isset($opt['dash']) && is_array($opt['dash'])){
 			$style['dash'] = implode(',',$opt['dash']);
 		}
