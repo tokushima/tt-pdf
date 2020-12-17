@@ -295,13 +295,52 @@ class PDF{
 	 * @param number $y mm
 	 * @param number $w mm
 	 * @param number $h mm
-	 * @param number $mark 角トンボの長さ mm
-	 * @param number $bleed ドブ幅 mm
-	 * @param boolean $center センタートンボの表示
+	 * @param array $opt
+	 * 
+	 * opt:
+	 *  number $size mm
+	 *  boolean $center センタートンボの描画
+	 *  boolean $inner 内トンボ上を描画
+	 * 
 	 * @return $this
 	 */
-	public function add_trim_mark($x,$y,$w,$h,$mark=9,$bleed=3,$center=true){
-		$this->lib->add_trim_mark($x, $y, $w, $h, $mark, $bleed, $center);
+	public function add_trim_mark($x,$y,$w,$h,$opt=[]){
+		$s = $opt['size'] ?? 3;
+		$i = ($opt['inner'] ?? true) ? 0 : $s;
+
+		$this->add_line($x-$s, $y, $x+$s-$i, $y);
+		$this->add_line($x, $y-$s, $x, $y+$s-$i);	
+		$this->add_line($x, $y+$s, $x-$s, $y+$s);
+		$this->add_line($x+$s, $y, $x+$s, $y-$s);
+
+		$this->add_line($w+$x+$s, $y, $w+$x-$s+$i, $y);
+		$this->add_line($w+$x, $y-$s, $w+$x, $y+$s-$i);
+		$this->add_line($w+$x-$s, $y, $w+$x-$s, $y-$s);
+		$this->add_line($w+$x, $y+$s, $w+$x+$s, $y+$s);
+		
+		$this->add_line($x-$s, $h+$y, $x+$s-$i, $h+$y);
+		$this->add_line($x, $h+$y-$s+$i, $x, $h+$y+$s);
+		$this->add_line($x, $h+$y-$s, $x-$s, $h+$y-$s);
+		$this->add_line($x+$s, $h+$y, $x+$s, $h+$y+$s);
+
+		$this->add_line($w+$x+$s, $h+$y, $w+$x-$s+$i, $h+$y);
+		$this->add_line($w+$x, $h+$y+$s, $w+$x, $h+$y-$s+$i);
+		$this->add_line($w+$x, $h+$y-$s, $w+$x+$s, $h+$y-$s);
+		$this->add_line($w+$x-$s, $h+$y, $w+$x-$s, $h+$y+$s);
+		
+		if($opt['center'] ?? false){
+			$this->add_line($x-($s*2), $y+($h/2)-($h/6), $x-($s*2), $y+($h/2)+($h/6));
+			$this->add_line($x-($s*2)+1, $y+($h/2), $x-($s*2)-$s, $y+($h/2));
+			
+			$this->add_line($x+$w+($s*2), $y+($h/2)-($h/6), $x+$w+($s*2), $y+($h/2)+($h/6));
+			$this->add_line($x+$w+($s*2)-1, $y+($h/2), $x+$w+($s*2)+$s, $y+($h/2));
+			
+			$this->add_line($x+($w/2)-($w/6), $y-($s*2), $x+($w/2)+($w/6), $y-($s*2));
+			$this->add_line($x+($w/2), $y-($s*2)+1, $x+($w/2), $y-($s*2)-$s);
+			
+			$this->add_line($x+($w/2)-($w/6),$y+$h+($s*2),$x+($w/2)+($w/6),$y+$h+($s*2));
+			$this->add_line($x+($w/2), $y+$h+($s*2)-1, $x+($w/2), $y+$h+($s*2)+$s);
+		}
 		return $this;
 	}
 	

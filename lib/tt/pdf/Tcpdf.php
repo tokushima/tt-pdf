@@ -241,7 +241,7 @@ class Tcpdf{
 	 * @return $this
 	 */
 	public function add_line($sx,$sy,$ex,$ey,$opt=[]){
-		$border_width = $opt['border_width'] ?? 0.2;
+		$border_width = $opt['border_width'] ?? 0.1;
 		$border_color = $this->color_dec($opt['border_color'] ?? ($opt['color'] ?? '#000000'));
 		$style = [
 			'width'=>$border_width,
@@ -465,54 +465,7 @@ class Tcpdf{
 		}
 		return $this;
 	}
-	
-	/**
-	 * トンボの追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $w mm
-	 * @param number $h mm 
-	 * @param number $mark トンボの長さ mm 
-	 * @param boolean $center センタートンボの表示
-	 * @return $this
-	 */
-	public function add_trim_mark($x,$y,$w,$h,$mark=3,$center=false){
-		$this->add_line($x, $y, $x, $y-$mark);
-		$this->add_line($x, $y, $x-$mark, $y);
-		$this->add_line($x, $y, $x, $y-$mark);
-		$this->add_line($x, $y, $x-$mark, $y);
 		
-		$this->add_line($x+$w, $y, $x+$w, $y-$mark);
-		$this->add_line($x+$w, $y, $x+$w+$mark, $y);
-		$this->add_line($x+$w, $y, $x+$w, $y-$mark);
-		$this->add_line($x+$w, $y, $x+$w+$mark, $y);
-		
-		$this->add_line($x, $y+$h, $x, $y+$h+$mark);
-		$this->add_line($x, $y+$h, $x-$mark, $y+$h);
-		$this->add_line($x, $y+$h, $x, $y+$h+$mark);
-		$this->add_line($x, $y+$h, $x-$mark, $y+$h);
-		
-		$this->add_line($x+$w, $y+$h, $x+$w, $y+$h+$mark);
-		$this->add_line($x+$w, $y+$h, $x+$w+$mark, $y+$h);
-		$this->add_line($x+$w, $y+$h, $x+$w, $y+$h+$mark);
-		$this->add_line($x+$w, $y+$h, $x+$w+$mark, $y+$h);
-		
-		if($center){
-			$this->add_line($x, $y+($h/2)-($h/6), $x, $y+($h/2)+($h/6));
-			$this->add_line($x+1, $y+($h/2), $x, $y+($h/2));
-			
-			$this->add_line($x+$w, $y+($h/2)-($h/6), $x+$w, $y+($h/2)+($h/6));
-			$this->add_line($x+$w-1, $y+($h/2), $x+$w, $y+($h/2));
-			
-			$this->add_line($x+($w/2)-($w/6), $y, $x+($w/2)+($w/6), $y);
-			$this->add_line($x+($w/2), $y+1, $x+($w/2), $y);
-			
-			$this->add_line($x+($w/2)-($w/6),$y+$h,$x+($w/2)+($w/6),$y+$h);
-			$this->add_line($x+($w/2), $y+$h-1, $x+($w/2), $y+$h);
-		}
-		return $this;
-	}
-	
 	/**
 	 * カラーモードからRGB（10進数）を返す
 	 * @param string $color_code

@@ -332,7 +332,7 @@ class PDFlib{
 		$this->pdf->save();
 		
 		$this->pdf->setcolor('fillstroke',$border_color[0],$border_color[1],$border_color[2],$border_color[3],$border_color[4] ?? 0);
-		$this->pdf->setlinewidth(\ebi\Calc::mm2pt($border_width ?? 0.2));
+		$this->pdf->setlinewidth(\ebi\Calc::mm2pt($border_width ?? 0.1));
 
 		if(isset($opt['dash']) && is_array($opt['dash'])){
 			$this->pdf->set_graphics_option('dasharray={'.implode(' ',$this->mm2pt($opt['dash'])).'}');
@@ -577,53 +577,6 @@ class PDFlib{
 		for($mm=0;$mm<=$h;$mm+=1){
 			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0) ? 3 : (($mm % 5 === 0) ? 2 : 1));
 			$this->add_line(0, $mm, $l, $mm);
-		}
-		return $this;
-	}
-	
-	/**
-	 * トンボの追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $w mm
-	 * @param number $h mm
-	 * @param number $mark トンボの長さ mm
-	 * @param boolean $center センタートンボの表示
-	 * @return $this
-	 */
-	public function add_trim_mark($x,$y,$w,$h,$mark=3,$center=false){
-		$this->add_line($x, $y, $x, $y-$mark);
-		$this->add_line($x, $y, $x-$mark, $y);
-		$this->add_line($x, $y, $x, $y-$mark);
-		$this->add_line($x, $y, $x-$mark, $y);
-		
-		$this->add_line($x+$w, $y, $x+$w, $y-$mark);
-		$this->add_line($x+$w, $y, $x+$w+$mark, $y);
-		$this->add_line($x+$w, $y, $x+$w, $y-$mark);
-		$this->add_line($x+$w, $y, $x+$w+$mark, $y);
-		
-		$this->add_line($x, $y+$h, $x, $y+$h+$mark);
-		$this->add_line($x, $y+$h, $x-$mark, $y+$h);
-		$this->add_line($x, $y+$h, $x, $y+$h+$mark);
-		$this->add_line($x, $y+$h, $x-$mark, $y+$h);
-		
-		$this->add_line($x+$w, $y+$h, $x+$w, $y+$h+$mark);
-		$this->add_line($x+$w, $y+$h, $x+$w+$mark, $y+$h);
-		$this->add_line($x+$w, $y+$h, $x+$w, $y+$h+$mark);
-		$this->add_line($x+$w, $y+$h, $x+$w+$mark, $y+$h);
-		
-		if($center){
-			$this->add_line($x, $y+($h/2)-($h/6), $x, $y+($h/2)+($h/6));
-			$this->add_line($x+1, $y+($h/2), $x, $y+($h/2));
-			
-			$this->add_line($x+$w, $y+($h/2)-($h/6), $x+$w, $y+($h/2)+($h/6));
-			$this->add_line($x+$w-1, $y+($h/2), $x+$w, $y+($h/2));
-			
-			$this->add_line($x+($w/2)-($w/6), $y, $x+($w/2)+($w/6), $y);
-			$this->add_line($x+($w/2), $y+1, $x+($w/2), $y);
-			
-			$this->add_line($x+($w/2)-($w/6),$y+$h,$x+($w/2)+($w/6),$y+$h);
-			$this->add_line($x+($w/2), $y+$h-1, $x+($w/2), $y+$h);
 		}
 		return $this;
 	}
