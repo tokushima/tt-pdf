@@ -307,39 +307,40 @@ class PDF{
 	public function add_trim_mark($x,$y,$w,$h,$opt=[]){
 		$s = $opt['size'] ?? 3;
 		$i = ($opt['inner'] ?? true) ? 0 : $s;
+		$lopt = ['color'=>($opt['color'] ?? '#000000')];
 
-		$this->add_line($x-$s, $y, $x+$s-$i, $y);
-		$this->add_line($x, $y-$s, $x, $y+$s-$i);	
-		$this->add_line($x, $y+$s, $x-$s, $y+$s);
-		$this->add_line($x+$s, $y, $x+$s, $y-$s);
+		$this->add_line($x-$s, $y, $x+$s-$i, $y, $lopt);
+		$this->add_line($x, $y-$s, $x, $y+$s-$i, $lopt);
+		$this->add_line($x, $y+$s, $x-$s, $y+$s, $lopt);
+		$this->add_line($x+$s, $y, $x+$s, $y-$s, $lopt);
 
-		$this->add_line($w+$x+$s, $y, $w+$x-$s+$i, $y);
-		$this->add_line($w+$x, $y-$s, $w+$x, $y+$s-$i);
-		$this->add_line($w+$x-$s, $y, $w+$x-$s, $y-$s);
-		$this->add_line($w+$x, $y+$s, $w+$x+$s, $y+$s);
+		$this->add_line($w+$x+$s, $y, $w+$x-$s+$i, $y, $lopt);
+		$this->add_line($w+$x, $y-$s, $w+$x, $y+$s-$i, $lopt);
+		$this->add_line($w+$x-$s, $y, $w+$x-$s, $y-$s, $lopt);
+		$this->add_line($w+$x, $y+$s, $w+$x+$s, $y+$s, $lopt);
 		
-		$this->add_line($x-$s, $h+$y, $x+$s-$i, $h+$y);
-		$this->add_line($x, $h+$y-$s+$i, $x, $h+$y+$s);
-		$this->add_line($x, $h+$y-$s, $x-$s, $h+$y-$s);
-		$this->add_line($x+$s, $h+$y, $x+$s, $h+$y+$s);
+		$this->add_line($x-$s, $h+$y, $x+$s-$i, $h+$y, $lopt);
+		$this->add_line($x, $h+$y-$s+$i, $x, $h+$y+$s, $lopt);
+		$this->add_line($x, $h+$y-$s, $x-$s, $h+$y-$s, $lopt);
+		$this->add_line($x+$s, $h+$y, $x+$s, $h+$y+$s, $lopt);
 
-		$this->add_line($w+$x+$s, $h+$y, $w+$x-$s+$i, $h+$y);
-		$this->add_line($w+$x, $h+$y+$s, $w+$x, $h+$y-$s+$i);
-		$this->add_line($w+$x, $h+$y-$s, $w+$x+$s, $h+$y-$s);
-		$this->add_line($w+$x-$s, $h+$y, $w+$x-$s, $h+$y+$s);
+		$this->add_line($w+$x+$s, $h+$y, $w+$x-$s+$i, $h+$y, $lopt);
+		$this->add_line($w+$x, $h+$y+$s, $w+$x, $h+$y-$s+$i, $lopt);
+		$this->add_line($w+$x, $h+$y-$s, $w+$x+$s, $h+$y-$s, $lopt);
+		$this->add_line($w+$x-$s, $h+$y, $w+$x-$s, $h+$y+$s, $lopt);
 		
 		if($opt['center'] ?? false){
-			$this->add_line($x-($s*2), $y+($h/2)-($h/6), $x-($s*2), $y+($h/2)+($h/6));
-			$this->add_line($x-($s*2)+1, $y+($h/2), $x-($s*2)-$s, $y+($h/2));
+			$this->add_line($x-($s*2), $y+($h/2)-($h/6), $x-($s*2), $y+($h/2)+($h/6), $lopt);
+			$this->add_line($x-($s*2)+1, $y+($h/2), $x-($s*2)-$s, $y+($h/2), $lopt);
 			
-			$this->add_line($x+$w+($s*2), $y+($h/2)-($h/6), $x+$w+($s*2), $y+($h/2)+($h/6));
-			$this->add_line($x+$w+($s*2)-1, $y+($h/2), $x+$w+($s*2)+$s, $y+($h/2));
+			$this->add_line($x+$w+($s*2), $y+($h/2)-($h/6), $x+$w+($s*2), $y+($h/2)+($h/6), $lopt);
+			$this->add_line($x+$w+($s*2)-1, $y+($h/2), $x+$w+($s*2)+$s, $y+($h/2), $lopt);
 			
-			$this->add_line($x+($w/2)-($w/6), $y-($s*2), $x+($w/2)+($w/6), $y-($s*2));
-			$this->add_line($x+($w/2), $y-($s*2)+1, $x+($w/2), $y-($s*2)-$s);
+			$this->add_line($x+($w/2)-($w/6), $y-($s*2), $x+($w/2)+($w/6), $y-($s*2), $lopt);
+			$this->add_line($x+($w/2), $y-($s*2)+1, $x+($w/2), $y-($s*2)-$s, $lopt);
 			
-			$this->add_line($x+($w/2)-($w/6),$y+$h+($s*2),$x+($w/2)+($w/6),$y+$h+($s*2));
-			$this->add_line($x+($w/2), $y+$h+($s*2)-1, $x+($w/2), $y+$h+($s*2)+$s);
+			$this->add_line($x+($w/2)-($w/6),$y+$h+($s*2),$x+($w/2)+($w/6),$y+$h+($s*2), $lopt);
+			$this->add_line($x+($w/2), $y+$h+($s*2)-1, $x+($w/2), $y+$h+($s*2)+$s, $lopt);
 		}
 		return $this;
 	}

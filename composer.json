@@ -6,10 +6,10 @@
 		}
 	},
 	"require" : {
-		"tokushima/ebi" : ">=3.2.7",
+		"tokushima/ebi" : ">=3.2.15",
 		"tecnickcom/tcpdf": "6.3.5",
-		"setasign/fpdi": "2.3",
-		"bacon/bacon-qr-code": "2.0.0"
+		"setasign/fpdi": "v2.3.5",
+		"bacon/bacon-qr-code": "2.0.3"
 	},
 	"after": {
 		"dummy": [
