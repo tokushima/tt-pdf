@@ -20,7 +20,7 @@ class PDFlib{
 	
 	/**
 	 * 
-	 * @param number $pdfversion 作成するPDFバージョン
+	 * @param float $pdfversion 作成するPDFバージョン
 	 * @param boolean $compress PDFオブジェクトを圧縮する （PDF-1.5以降のバージョン）
 	 * @throws \LogicException
 	 */
@@ -60,6 +60,13 @@ class PDFlib{
 	}
 	
 	/**
+	 * @return boolean
+	 */
+	public function is_K100(){
+		return $this->K100;
+	}
+	
+	/**
 	 * フォントを追加する
 	 * @param string $fontfile
 	 * @param string $alias
@@ -75,7 +82,7 @@ class PDFlib{
 	
 	/**
 	 *　PDFlibでの扱いはptなのでmmからptに計算する
-	 * @return number[]
+	 * @return float[]
 	 */
 	private function mm2pt($arg){
 		$result = [];
@@ -127,8 +134,8 @@ class PDFlib{
 	
 	/**
 	 * ページを追加
-	 * @param number $width
-	 * @param number $height
+	 * @param float $width
+	 * @param float $height
 	 * @return $this
 	 */
 	public function add_page($width,$height){
@@ -145,8 +152,8 @@ class PDFlib{
 	
 	/**
 	 * 画像を追加
-	 * @param number $x mm
-	 * @param number $y mm
+	 * @param float $x mm
+	 * @param float $y mm
 	 * @param string $filepath
 	 * @param mixed{} $opt
 	 *
@@ -186,10 +193,10 @@ class PDFlib{
 	
 	/**
 	 * SVGを追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $width mm
+	 * @param float $height mm
 	 * @param string $filepath
 	 * @param mixed{} $opt
 	 *
@@ -220,7 +227,7 @@ class PDFlib{
 		
 		return $this;
 	}
-	private function add_svg_string($x,$y,$width,$height,$svgstring,$opt=[]){
+	public function add_svg_string($x,$y,$width,$height,$svgstring,$opt=[]){
 		list($x,$y,$width,$height) = $this->mm2pt($x,$y,$width,$height);
 		
 		$pvf_iamge = 'pvf/image_'.self::$pvfkeys++;
@@ -247,14 +254,14 @@ class PDFlib{
 	
 	/**
 	 * PDFを追加
-	 * @param number $x mm
-	 * @param number $y mm
+	 * @param float $x mm
+	 * @param float $y mm
 	 * @param string $filepath
 	 * @param mixed{} $opt
 	 *
 	 * opt:
 	 *  integer $angle 回転角度
-	 *  number $scale 拡大率
+	 *  float $scale 拡大率
 	 *  integer $page_no 追加するページ番号
 	 *
 	 * @throws \ebi\exception\AccessDeniedException
@@ -310,16 +317,16 @@ class PDFlib{
 	
 	/**
 	 * 線
-	 * @param number $sx mm
-	 * @param number $sy mm
-	 * @param number $ex mm
-	 * @param number $ey mm
+	 * @param float $sx mm
+	 * @param float $sy mm
+	 * @param float $ex mm
+	 * @param float $ey mm
 	 * @param mixed{} $opt
 	 *
 	 * opt:
 	 *  string $border_color 線の色 #FFFFFF
-	 *  number $border_width 線の太さ mm
-	 *  number[] $dash 点線の長さ [5,2] mm
+	 *  float $border_width 線の太さ mm
+	 *  float[] $dash 点線の長さ [5,2] mm
 	 *
 	 * @return $this
 	 */
@@ -349,17 +356,17 @@ class PDFlib{
 	
 	/**
 	 * 矩形
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $w mm
-	 * @param number $h mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $w mm
+	 * @param float $h mm
 	 * @param mixed{} $opt
 	 *
 	 * opt:
 	 *  boolean $fill true: 塗りつぶす
 	 *  string $color 色 #000000
 	 *  string $border_color 線の色 #FFFFFF
-	 *  number $border_width 線の太さ mm
+	 *  float $border_width 線の太さ mm
 	 *
 	 * @return $this
 	 */
@@ -405,16 +412,16 @@ class PDFlib{
 	
 	/**
 	 * 円
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $diameter 直径 mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $diameter 直径 mm
 	 * @param mixed{} $opt
 	 *
 	 * opt:
 	 *  boolean $fill true: 塗りつぶす
 	 *  string $color 色 #000000
 	 *  string $border_color 線の色 #FFFFFF
-	 *  number $border_width 線の太さ mm
+	 *  float $border_width 線の太さ mm
 	 *
 	 * @return $this
 	 */
@@ -464,105 +471,6 @@ class PDFlib{
 	}
 	
 	/**
-	 * QR Code を追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param string $value
-	 * @param mixed{} $opt
-	 *
-	 * opt:
-	 *  string $color #000000
-	 *  string $bgcolor #FFFFFF
-	 *  number $padding (cell)
-	 *  string $level L, M, Q, H (error correction level)
-	 *  integer $angle 回転角度
-	 *
-	 * @return $this
-	 */
-	public function add_qrcode($x,$y,$width,$value,$opt=[]){
-		$renderer = new \BaconQrCode\Renderer\ImageRenderer(
-			new \BaconQrCode\Renderer\RendererStyle\RendererStyle(400),
-			new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
-		);
-		$writer = new \BaconQrCode\Writer($renderer);
-		$writer->writeString($value);
-		
-		$this->add_svg_string(
-			$x,
-			$y,
-			$width,
-			$width,
-			$writer->writeString($value),
-			$opt
-		);
-		return $this;
-	}
-	
-	/**
-	 * JAN13バーコードを追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
-	 * @param string $code
-	 * @param mixed{} $opt
-	 *
-	 * 	string $color #000000
-	 * 	number $bar_height バーコードの高さ
-	 * 	number $module_width 1モジュールの幅
-	 *  boolean $show_text コード文字列を表示する
-	 * 	number $font_size フォントサイズ
-	 * 	string $font_family フォント名
-	 *  integer $angle 回転角度
-	 */
-	public function add_jan13($x,$y,$width,$height,$code,$opt=[]){
-		$this->add_svg_string(
-			$x,
-			$y,
-			$width,
-			$height,
-			\ebi\Barcode::JAN13($code,$opt),
-			$opt
-		);
-		return $this;
-	}
-	
-	/**
-	 * NW-7 (CODABAR)を追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
-	 * @param string $code
-	 * @param mixed{} $opt
-	 *
-	 * 	string $color #000000
-	 * 	number $bar_height バーコードの高さ
-	 * 	number $module_width 1モジュールの幅
-	 *  boolean $show_text コード文字列を表示する
-	 * 	number $font_size フォントサイズ
-	 * 	string $font_family フォント名
-	 *  integer $angle 回転角度
-	 *
-	 * @return $this
-	 */
-	public function add_nw7($x,$y,$width,$height,$code,$opt=[]){
-		$this->add_svg_string(
-			$x,
-			$y,
-			$width,
-			$height,
-			\ebi\Barcode::NW7($code,$opt),
-			$opt
-		);
-		return $this;
-	}
-	
-
-
-	
-	/**
 	 * ルーラーの追加
 	 * @return $this
 	 */
@@ -583,10 +491,10 @@ class PDFlib{
 	
 	/**
 	 * テキストボックスの追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $width mm
+	 * @param float $height mm
 	 * @param string $text
 	 * @param mixed{} $opt
 	 *
@@ -595,9 +503,9 @@ class PDFlib{
 	 *  integer $valign 0: TOP, 1: MIDDLE, 2: BOTTOM
 	 *  string $color #000000
 	 *  string $font_family フォントファミリー
-	 *  number $font_size フォントサイズ pt
-	 *  number $text_spacing 文字間隔 pt
-	 *  number $text_leading 行間隔 pt
+	 *  float $font_size フォントサイズ pt
+	 *  float $text_spacing 文字間隔 pt
+	 *  float $text_leading 行間隔 pt
 	 *  integer $angle 回転角度
 	 *
 	 * @return $this
@@ -661,19 +569,13 @@ class PDFlib{
 			$color_code = substr($color_code,1);
 		}
 		
-		if($this->K100 && ($color_code === '000000' || $color_code === '000')){
+		if($this->K100 && ($color_code === '000000')){
 			return ['cmyk',0,0,0,1];
 		}
+		$r = hexdec(substr($color_code,0,2));
+		$g = hexdec(substr($color_code,2,2));
+		$b = hexdec(substr($color_code,4,2));
 		
-		if(strlen($color_code) == 6){
-			$r = hexdec(substr($color_code,0,2));
-			$g = hexdec(substr($color_code,2,2));
-			$b = hexdec(substr($color_code,4,2));
-		}else{
-			$r = hexdec(substr($color_code,0,1));
-			$g = hexdec(substr($color_code,1,1));
-			$b = hexdec(substr($color_code,2,1));
-		}
 		return [
 			'rgb',
 			$r === 0 ? 0 : ($r / 255),
@@ -685,12 +587,12 @@ class PDFlib{
 	/**
 	 * PDFlibでの扱いは左下起点なので左上起点から左下起点に計算する(単位はpt)
 	 * 
-	 * @param number $x pt
-	 * @param number $y pt
-	 * @param number $width pt
-	 * @param number $height pt
-	 * @param number $angle
-	 * @return number[] [x1,y1,x2,y2]
+	 * @param float $x pt
+	 * @param float $y pt
+	 * @param float $width pt
+	 * @param float $height pt
+	 * @param float $angle
+	 * @return float[] [x1,y1,x2,y2]
 	 */
 	private function disp($x,$y,$width,$height,$angle=0){
 		$base_x = 0;
@@ -712,8 +614,8 @@ class PDFlib{
 	
 	/**
 	 * PDFlibでの扱いは左回転なので右回転から左回転に計算する
-	 * @param number $angle
-	 * @return number
+	 * @param float $angle
+	 * @return float
 	 */
 	private function rotate2world($angle){
 		return 360 - $angle;
@@ -780,12 +682,12 @@ class PDFlib{
 	public static function get_page_size($pdffile){
 		$self = new static();
 		$doc_id = $self->load_pdf($pdffile);
-		$pages = (int)$self->pdf->pcos_get_number($doc_id,'length:pages');
+		$pages = (int)$self->pdf->pcos_get_float($doc_id,'length:pages');
 		$page_size = [];
 		
 		for($index=0;$index<$pages;$index++){
-			$width = $self->pdf->pcos_get_number($doc_id,sprintf('pages[%d]/width',$index));
-			$height = $self->pdf->pcos_get_number($doc_id,sprintf('pages[%d]/height',$index));
+			$width = $self->pdf->pcos_get_float($doc_id,sprintf('pages[%d]/width',$index));
+			$height = $self->pdf->pcos_get_float($doc_id,sprintf('pages[%d]/height',$index));
 			
 			$page_size[$index + 1] = [
 				\ebi\Calc::pt2mm($width),

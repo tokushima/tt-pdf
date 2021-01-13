@@ -95,8 +95,8 @@ class PDF{
 	}
 	/**
 	 * ページを追加
-	 * @param number $width
-	 * @param number $height
+	 * @param float $width
+	 * @param float $height
 	 * @return $this
 	 */
 	public function add_page($width,$height){
@@ -106,8 +106,8 @@ class PDF{
 	
 	/**
 	 * 画像を追加
-	 * @param number $x mm
-	 * @param number $y mm
+	 * @param float $x mm
+	 * @param float $y mm
 	 * @param string $filepath
 	 * @param mixed{} $opt
 	 *
@@ -124,10 +124,10 @@ class PDF{
 	}
 	/**
 	 * SVGを追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $width mm
+	 * @param float $height mm
 	 * @param string $filepath
 	 * @param mixed{} $opt
 	 *
@@ -143,8 +143,8 @@ class PDF{
 	
 	/**
 	 * PDFを追加
-	 * @param number $x mm
-	 * @param number $y mm
+	 * @param float $x mm
+	 * @param float $y mm
 	 * @param string $filepath
 	 * @param mixed{} $opt
 	 *
@@ -160,15 +160,15 @@ class PDF{
 	
 	/**
 	 * 線
-	 * @param number $sx mm
-	 * @param number $sy mm
-	 * @param number $ex mm
-	 * @param number $ey mm
+	 * @param float $sx mm
+	 * @param float $sy mm
+	 * @param float $ex mm
+	 * @param float $ey mm
 	 * @param mixed{} $opt
 	 *
 	 * opt:
 	 *  string $border_color 線の色 #FFFFFF
-	 *  number $border_width 線の太さ mm
+	 *  float $border_width 線の太さ mm
 	 *
 	 * @return $this
 	 */
@@ -178,17 +178,17 @@ class PDF{
 	
 	/**
 	 * 矩形
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $width mm
+	 * @param float $height mm
 	 * @param mixed{} $opt
 	 *
 	 * opt:
 	 *  boolean $fill true: 塗りつぶす
 	 *  string $color 色 #000000
 	 *  string $border_color 線の色 #FFFFFF
-	 *  number $border_width 線の太さ mm
+	 *  float $border_width 線の太さ mm
 	 *
 	 * @return $this
 	 */
@@ -198,16 +198,16 @@ class PDF{
 	
 	/**
 	 * 円
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $diameter 直径 mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $diameter 直径 mm
 	 * @param mixed{} $opt
 	 *
 	 * opt:
 	 *  boolean $fill true: 塗りつぶす
 	 *  string $color 色 #000000
 	 *  string $border_color 線の色 #FFFFFF
-	 *  number $border_width 線の太さ mm
+	 *  float $border_width 線の太さ mm
 	 *
 	 * @return $this
 	 */
@@ -215,69 +215,131 @@ class PDF{
 		$this->lib->add_circle($x, $y, $diameter, $opt);
 		return $this;
 	}
+
 	/**
 	 * QR Code を追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $size mm
 	 * @param string $value
 	 * @param mixed{} $opt
 	 *
 	 * opt:
 	 *  string $color #000000
 	 *  string $bgcolor #FFFFFF
-	 *  number $padding (cell)
+	 *  float $padding (cell)
 	 *  string $level L, M, Q, H (error correction level)
 	 *  integer $angle 回転角度
 	 *
 	 * @return $this
 	 */
-	public function add_qrcode($x,$y,$width,$value,$opt=[]){
-		$this->lib->add_qrcode($x, $y, $width, $value, $opt);
+	public function add_qrcode($x,$y,$size,$value,$opt=[]){
+		$padding = $opt['padding'] ?? 4;
+		
+		$color_func = function($color_code){
+			if(substr($color_code,0,1) == '#'){
+				$color_code = substr($color_code,1);
+			}
+			if($this->lib->is_K100() && ($color_code === '000000')){
+				return new \BaconQrCode\Renderer\Color\Cmyk(0, 0, 0, 1);
+			}
+			$r = hexdec(substr($color_code,0,2));
+			$g = hexdec(substr($color_code,2,2));
+			$b = hexdec(substr($color_code,4,2));
+			
+			return new \BaconQrCode\Renderer\Color\Rgb($r, $g, $b);
+		};
+		
+		$renderer = new \BaconQrCode\Renderer\ImageRenderer(
+			new \BaconQrCode\Renderer\RendererStyle\RendererStyle(
+				400,
+				$padding,
+				null,
+				null,
+				\BaconQrCode\Renderer\RendererStyle\Fill::uniformColor(
+					$color_func($opt['bgcolor'] ?? 'FFFFFF'),
+					$color_func($opt['color'] ?? '000000')
+				)
+			),
+			new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
+		);
+		
+		$writer = new \BaconQrCode\Writer($renderer);
+		$writer->writeString(
+			$value,
+			\BaconQrCode\Encoder\Encoder::DEFAULT_BYTE_MODE_ECODING,
+			null,
+			\BaconQrCode\Common\ErrorCorrectionLevel::L()
+		);
+		
+		$this->lib->add_svg_string(
+			$x,
+			$y,
+			$size,
+			$size,
+			$writer->writeString($value),
+			$opt
+		);
 		return $this;
 	}
+	
 	/**
 	 * JAN13バーコードを追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $width mm
+	 * @param float $height mm
 	 * @param string $code
 	 * @param mixed{} $opt
 	 *
 	 * 	string $color #000000
-	 * 	number $bar_height バーコードの高さ
-	 * 	number $module_width 1モジュールの幅
+	 * 	float $bar_height バーコードの高さ
+	 * 	float $module_width 1モジュールの幅
 	 *  boolean $show_text コード文字列を表示する
-	 * 	number $font_size フォントサイズ
+	 * 	float $font_size フォントサイズ
 	 * 	string $font_family フォント名
 	 *  integer $angle 回転角度
 	 */
 	public function add_jan13($x,$y,$width,$height,$code,$opt=[]){
-		$this->lib->add_jan13($x, $y, $width, $height, $code, $opt);
+		$this->lib->add_svg_string(
+			$x,
+			$y,
+			$width,
+			$height,
+			\ebi\Barcode::JAN13($code,$opt),
+			$opt
+		);
+		return $this;
 	}
 	
 	/**
 	 * NW-7 (CODABAR)を追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $width mm
+	 * @param float $height mm
 	 * @param string $code
 	 * @param mixed{} $opt
 	 *
 	 * 	string $color #000000
-	 * 	number $bar_height バーコードの高さ
-	 * 	number $module_width 1モジュールの幅
+	 * 	float $bar_height バーコードの高さ
+	 * 	float $module_width 1モジュールの幅
 	 *  boolean $show_text コード文字列を表示する
-	 * 	number $font_size フォントサイズ
+	 * 	float $font_size フォントサイズ
 	 * 	string $font_family フォント名
 	 *  integer $angle 回転角度
 	 *
 	 * @return $this
 	 */
 	public function add_nw7($x,$y,$width,$height,$code,$opt=[]){
-		$this->lib->add_nw7($x, $y, $width, $height, $code, $opt);
+		$this->lib->add_svg_string(
+			$x,
+			$y,
+			$width,
+			$height,
+			\ebi\Barcode::NW7($code,$opt),
+			$opt
+		);
 		return $this;
 	}
 	/**
@@ -291,14 +353,14 @@ class PDF{
 	
 	/**
 	 * トンボの追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $w mm
-	 * @param number $h mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $w mm
+	 * @param float $h mm
 	 * @param array $opt
 	 * 
 	 * opt:
-	 *  number $size mm
+	 *  float $size mm
 	 *  boolean $center センタートンボの描画
 	 *  boolean $inner 内トンボ上を描画
 	 * 
@@ -347,10 +409,10 @@ class PDF{
 	
 	/**
 	 * テキストボックスの追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $width mm
+	 * @param float $height mm
 	 * @param string $text
 	 * @param mixed{} $opt
 	 *
@@ -359,9 +421,9 @@ class PDF{
 	 *  integer $valign 0: TOP, 1: MIDDLE, 2: BOTTOM
 	 *  string $color #000000
 	 *  string $font_family フォントファミリー
-	 *  number $font_size フォントサイズ pt
-	 *  number $text_spacing 文字間隔 pt
-	 *  number $text_leading 行間隔 pt
+	 *  float $font_size フォントサイズ pt
+	 *  float $text_spacing 文字間隔 pt
+	 *  float $text_leading 行間隔 pt
 	 *  integer $angle 回転角度
 	 *
 	 * @return $this

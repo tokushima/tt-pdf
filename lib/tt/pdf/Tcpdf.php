@@ -7,7 +7,7 @@ namespace tt\pdf;
  */
 class Tcpdf{
 	private $pdf;
-	private $k100 = false;
+	private $K100 = false;
 	private $font_names = [];
 	
 	public function __construct($version=null){
@@ -33,8 +33,15 @@ class Tcpdf{
 	 * @return $this
 	 */
 	public function K100($boolean){
-		$this->k100 = (boolean)$boolean;
+		$this->K100 = (boolean)$boolean;
 		return $this;
+	}
+	
+	/**
+	 * @return boolean
+	 */
+	public function is_K100(){
+		return $this->K100;
 	}
 	
 	/**
@@ -108,8 +115,8 @@ class Tcpdf{
 	
 	/**
 	 * ページを追加
-	 * @param number $width
-	 * @param number $height
+	 * @param float $width
+	 * @param float $height
 	 * @return $this
 	 */
 	public function add_page($width,$height){
@@ -126,8 +133,8 @@ class Tcpdf{
 	
 	/**
 	 * 画像を追加
-	 * @param number $x mm
-	 * @param number $y mm
+	 * @param float $x mm
+	 * @param float $y mm
 	 * @param string $filepath
 	 * @param mixed{} $opt
 	 * 
@@ -157,10 +164,10 @@ class Tcpdf{
 	
 	/**
 	 * SVGを追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $width mm
+	 * @param float $height mm
 	 * @param string $filepath
 	 * @param mixed{} $opt
 	 * 
@@ -189,14 +196,14 @@ class Tcpdf{
 	
 	/**
 	 * PDFを追加
-	 * @param number $x mm
-	 * @param number $y mm
+	 * @param float $x mm
+	 * @param float $y mm
 	 * @param string $filepath
 	 * @param mixed{} $opt
 	 * 
 	 * opt:
 	 *  integer $angle 回転角度
-	 *  number $scale 拡大率
+	 *  float $scale 拡大率
 	 *  integer $page_no 追加するページ番号
 	 *  
 	 * @throws \ebi\exception\AccessDeniedException
@@ -227,16 +234,16 @@ class Tcpdf{
 	
 	/**
 	 * 線
-	 * @param number $sx mm
-	 * @param number $sy mm
-	 * @param number $ex mm
-	 * @param number $ey mm
+	 * @param float $sx mm
+	 * @param float $sy mm
+	 * @param float $ex mm
+	 * @param float $ey mm
 	 * @param mixed{} $opt 
 	 * 
 	 * opt:
 	 *  string $border_color 線の色 #FFFFFF
-	 *  number $border_width 線の太さ mm
-	 *  number[] $dash 点線の長さ [5,2] mm
+	 *  float $border_width 線の太さ mm
+	 *  float[] $dash 点線の長さ [5,2] mm
 	 *  
 	 * @return $this
 	 */
@@ -266,17 +273,17 @@ class Tcpdf{
 	
 	/**
 	 * 矩形
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $width mm
+	 * @param float $height mm
 	 * @param mixed{} $opt
 	 * 
 	 * opt:
 	 *  boolean $fill true: 塗りつぶす
 	 *  string $color 色 #000000 
 	 *  string $border_color 線の色 #FFFFFF
-	 *  number $border_width 線の太さ mm
+	 *  float $border_width 線の太さ mm
 	 * 
 	 * @return $this
 	 */
@@ -306,16 +313,16 @@ class Tcpdf{
 	
 	/**
 	 * 円
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $diameter 直径 mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $diameter 直径 mm
 	 * @param mixed{} $opt 
 	 * 
 	 * opt:
 	 *  boolean $fill true: 塗りつぶす
 	 *  string $color 色 #000000 
 	 *  string $border_color 線の色 #FFFFFF
-	 *  number $border_width 線の太さ mm
+	 *  float $border_width 線の太さ mm
 	 * 
 	 * @return $this
 	 */
@@ -347,102 +354,6 @@ class Tcpdf{
 		];
 		$this->pdf->Ellipse($x, $y, $r,'',0,0,360,$style,$border_style,$color_rgb);
 		
-		return $this;
-	}
-	
-	/**
-	 * QR Code を追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param string $value
-	 * @param mixed{} $opt
-	 *
-	 * opt:
-	 *  string $color #000000
-	 *  string $bgcolor #FFFFFF
-	 *  number $padding (cell)
-	 *  string $level L, M, Q, H (error correction level)
-	 *  integer $angle 回転角度
-	 *  
-	 * @return $this
-	 */
-	public function add_qrcode($x,$y,$width,$value,$opt=[]){
-		$renderer = new \BaconQrCode\Renderer\ImageRenderer(
-			new \BaconQrCode\Renderer\RendererStyle\RendererStyle(400),
-			new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
-		);
-		$writer = new \BaconQrCode\Writer($renderer);
-		$writer->writeString($value);
-		
-		$this->add_svg_string(
-			$x,
-			$y,
-			$width,
-			$width,
-			$writer->writeString($value),
-			$opt
-		);
-		return $this;
-	}
-	
-	/**
-	 * JAN13バーコードを追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
-	 * @param string $code
-	 * @param mixed{} $opt
-	 * 
-	 * 	string $color #000000
-	 * 	number $bar_height バーコードの高さ
-	 * 	number $module_width 1モジュールの幅
-	 *  boolean $show_text コード文字列を表示する
-	 * 	number $font_size フォントサイズ
-	 * 	string $font_family フォント名
-	 *  integer $angle 回転角度
-	 */
-	public function add_jan13($x,$y,$width,$height,$code,$opt=[]){
-		$this->add_svg_string(
-			$x,
-			$y,
-			$width,
-			$height,
-			\ebi\Barcode::JAN13($code,$opt),
-			$opt
-		);
-		return $this;
-	}
-	
-	/**
-	 * NW-7 (CODABAR)を追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
-	 * @param string $code
-	 * @param mixed{} $opt
-	 *
-	 * 	string $color #000000
-	 * 	number $bar_height バーコードの高さ
-	 * 	number $module_width 1モジュールの幅
-	 *  boolean $show_text コード文字列を表示する
-	 * 	number $font_size フォントサイズ
-	 * 	string $font_family フォント名
-	 *  integer $angle 回転角度
-	 *  
-	 * @return $this
-	 */
-	public function add_nw7($x,$y,$width,$height,$code,$opt=[]){
-		$this->add_svg_string(
-			$x,
-			$y,
-			$width,
-			$height,
-			\ebi\Barcode::NW7($code,$opt),
-			$opt
-		);
 		return $this;
 	}
 	
@@ -483,27 +394,22 @@ class Tcpdf{
 		if(substr($color_code,0,1) == '#'){
 			$color_code = substr($color_code,1);
 		}
-		if($this->k100 && $color_code == '000000' || $color_code === '000'){
+		if($this->K100 && $color_code == '000000'){
 			return [0,0,0,100];
 		}
-		if(strlen($color_code) == 6){
-			$r = hexdec(substr($color_code,0,2));
-			$g = hexdec(substr($color_code,2,2));
-			$b = hexdec(substr($color_code,4,2));
-		}else{
-			$r = hexdec(substr($color_code,0,1));
-			$g = hexdec(substr($color_code,1,1));
-			$b = hexdec(substr($color_code,2,1));
-		}
+		$r = hexdec(substr($color_code,0,2));
+		$g = hexdec(substr($color_code,2,2));
+		$b = hexdec(substr($color_code,4,2));
+		
 		return [$r,$g,$b];
 	}
 	
 	/**
 	 * テキストボックスの追加
-	 * @param number $x mm
-	 * @param number $y mm
-	 * @param number $width mm
-	 * @param number $height mm
+	 * @param float $x mm
+	 * @param float $y mm
+	 * @param float $width mm
+	 * @param float $height mm
 	 * @param string $text
 	 * @param mixed{} $opt
 	 * 
@@ -512,9 +418,9 @@ class Tcpdf{
 	 *  integer $valign 0: TOP, 1: MIDDLE, 2: BOTTOM
 	 *  string $color #000000
 	 *  string $font_family フォントファミリー
-	 *  number $font_size フォントサイズ pt
-	 *  number $text_spacing 文字間隔 pt
-	 *  number $text_leading 行間隔 pt
+	 *  float $font_size フォントサイズ pt
+	 *  float $text_spacing 文字間隔 pt
+	 *  float $text_leading 行間隔 pt
 	 *  integer $angle 回転角度
 	 *  
 	 * @return $this
