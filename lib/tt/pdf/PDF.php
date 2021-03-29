@@ -95,8 +95,8 @@ class PDF{
 	}
 	/**
 	 * ページを追加
-	 * @param float $width
-	 * @param float $height
+	 * @param float $width mm
+	 * @param float $height mm
 	 * @return $this
 	 */
 	public function add_page($width,$height){

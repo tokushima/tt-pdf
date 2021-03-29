@@ -530,7 +530,8 @@ class PDFlib{
 			'leading=%s '.
 			'alignment=%s '.
 			'fillcolor={%s} '.
-			'hyphenchar=none ',
+			'hyphenchar=none '.
+			'charref=true ',
 			$font_family,
 			$font_size,
 			$text_spacing,
@@ -547,7 +548,7 @@ class PDFlib{
 			$this->rotate2world($angle),
 			($valign === 0 ? 'top' : ($valign === 1 ? 'center' : 'bottom'))
 		);
-		$textflow = $this->pdf->create_textflow($text, $optlist);
+		$textflow = $this->pdf->create_textflow(htmlentities($text, ENT_XML1), $optlist);
 		
 		list($disp_x,$disp_y,$disp_x2,$disp_y2) = $this->disp($x, $y, $width, $height, $angle);
 		$this->pdf->fit_textflow($textflow,$disp_x, $disp_y, $disp_x2,$disp_y2,$fitoptlist);
