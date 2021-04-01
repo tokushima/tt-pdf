@@ -436,24 +436,30 @@ class PDF{
 	/**
 	 * ファイルに書き出す
 	 * @param string $filename
+	 * @return string $filename
 	 */
 	public function write($filename){
 		$this->lib->write($filename);
+		return $filename;
 	}
 	
 	/**
 	 * 出力
 	 * @param string $filename
+	 * @return string $filename
 	 */
 	public function output($filename=null){
 		$this->lib->output($filename);
+		return $filename;
 	}
 	/**
 	 * ダウンロード
 	 * @param string $filename
+	 * @return string $filename
 	 */
 	public function download($filename=null){
 		$this->lib->download($filename);
+		return $filename;
 	}
 	
 	/**
