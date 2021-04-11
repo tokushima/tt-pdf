@@ -683,12 +683,12 @@ class PDFlib{
 	public static function get_page_size($pdffile){
 		$self = new static();
 		$doc_id = $self->load_pdf($pdffile);
-		$pages = (int)$self->pdf->pcos_get_float($doc_id,'length:pages');
+		$pages = (int)$self->pdf->pcos_get_number($doc_id,'length:pages');
 		$page_size = [];
 		
 		for($index=0;$index<$pages;$index++){
-			$width = $self->pdf->pcos_get_float($doc_id,sprintf('pages[%d]/width',$index));
-			$height = $self->pdf->pcos_get_float($doc_id,sprintf('pages[%d]/height',$index));
+			$width = $self->pdf->pcos_get_number($doc_id,sprintf('pages[%d]/width',$index));
+			$height = $self->pdf->pcos_get_number($doc_id,sprintf('pages[%d]/height',$index));
 			
 			$page_size[$index + 1] = [
 				\ebi\Calc::pt2mm($width),
