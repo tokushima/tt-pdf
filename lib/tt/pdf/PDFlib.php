@@ -26,9 +26,10 @@ class PDFlib{
 	 */
 	public function __construct($pdfversion=null, $compress=false, $license=null){
 		$this->pdf = new \PDFlib();
+		$license = $license ?? \ebi\Conf::get('license');
 		
 		if(!empty($license)){
-			$this->pdf->set_option('license='.\ebi\Conf::get('license', $license));
+			$this->pdf->set_option('license='.$license);
 		}
 		$this->pdf->set_option('stringformat=utf8'); // 文字列をUTF-8で渡すことをPDFlib に知らせる
 		
