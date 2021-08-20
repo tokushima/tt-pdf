@@ -7,6 +7,8 @@ namespace tt\pdf;
  */
 class Tcpdf{
 	private $pdf;
+	private $pages = 0;
+	private $current_page_size = [0,0];	
 	private $K100 = false;
 	private $font_names = [];
 	
@@ -43,6 +45,10 @@ class Tcpdf{
 	public function is_K100(){
 		return $this->K100;
 	}
+
+	public function current_page_size(){
+		return $this->current_page_size;
+	}
 	
 	/**
 	 * フォントを追加する
@@ -70,6 +76,25 @@ class Tcpdf{
 		$alias = empty($alias) ? preg_replace('/^(.+?)\.$/','\\1',$fontfile) : $alias;
 		$this->pdf->AddFont($alias,null,$fontfile);
 		
+		return $this;
+	}
+	
+	/**
+	 * ルーラーの追加
+	 * @return $this
+	 */
+	public function add_ruler(){
+		list($w,$h) = $this->current_page_size();
+		
+		$this->add_line(0, 0, 0, 5);
+		for($mm=0;$mm<=$w;$mm+=1){
+			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0) ? 3 : (($mm % 5 === 0) ? 2 : 1));
+			$this->add_line($mm, 0, $mm, $l);
+		}
+		for($mm=0;$mm<=$h;$mm+=1){
+			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0) ? 3 : (($mm % 5 === 0) ? 2 : 1));
+			$this->add_line(0, $mm, $l, $mm);
+		}
 		return $this;
 	}
 	
@@ -121,6 +146,9 @@ class Tcpdf{
 	 */
 	public function add_page($width,$height){
 		$this->pdf->AddPage(($width > $height) ? 'L' : 'P',[$width,$height]);
+		$this->current_page_size = [$width,$height];
+		$this->pages++;
+
 		return $this;
 	}
 	
@@ -185,7 +213,7 @@ class Tcpdf{
 		return $this;
 	}
 	
-	private function add_svg_string($x,$y,$width,$height,$svgstring,$opt=[]){
+	public function add_svg_string($x,$y,$width,$height,$svgstring,$opt=[]){
 		$this->rotate($x, $y, $opt);
 		
 		$this->pdf->ImageSVG('@'.$svgstring,$x,$y,$width,$height);
@@ -354,26 +382,6 @@ class Tcpdf{
 		];
 		$this->pdf->Ellipse($x, $y, $r,'',0,0,360,$style,$border_style,$color_rgb);
 		
-		return $this;
-	}
-	
-	/**
-	 * ルーラーの追加
-	 * @return $this
-	 */
-	public function add_ruler(){
-		$w = $this->pdf->getPageWidth();
-		$h = $this->pdf->getPageHeight();
-		
-		$this->add_line(0, 0, 0, 5);
-		for($mm=0;$mm<=$w;$mm+=1){
-			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0) ? 3 : (($mm % 5 === 0) ? 2 : 1));
-			$this->add_line($mm, 0, $mm, $l);
-		}
-		for($mm=0;$mm<=$h;$mm+=1){
-			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0) ? 3 : (($mm % 5 === 0) ? 2 : 1));
-			$this->add_line(0, $mm, $l, $mm);
-		}
 		return $this;
 	}
 		

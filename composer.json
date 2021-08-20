@@ -2,14 +2,13 @@
 	"name" : "tokushima/tt-pdf",
 	"autoload" : {
 		"psr-4" : {
-			"tt\\" : "lib/tt/"
+			"tt\\pdf\\" : "lib/tt/pdf/"
 		}
 	},
 	"require" : {
-		"tokushima/ebi" : ">=3.2.15",
-		"tecnickcom/tcpdf": "6.3.5",
-		"setasign/fpdi": "v2.3.5",
-		"bacon/bacon-qr-code": "2.0.3"
+		"tokushima/ebi" : ">=3.2.19",
+		"tecnickcom/tcpdf": "6.4.2",
+		"setasign/fpdi": "v2.3.6"
 	},
 	"after": {
 		"dummy": [

@@ -15,24 +15,20 @@ class PDFlib{
 	private $pages = 0;
 	private $current_page_size = [0,0];
 	private $K100 = false;
-	private $debug = false;
 	private $load_pdf = [];
 	
 	/**
 	 * 
 	 * @param float $pdfversion 作成するPDFバージョン
 	 * @param boolean $compress PDFオブジェクトを圧縮する （PDF-1.5以降のバージョン）
+	 * @param string license PDFlibのライセンス
 	 * @throws \LogicException
 	 */
-	public function __construct($pdfversion=null,$compress=false){
+	public function __construct($pdfversion=null, $compress=false, $license=null){
 		$this->pdf = new \PDFlib();
 		
-		/**
-		 * @param string ライセンス
-		 */
-		$license = \ebi\Conf::get('license',\tt\pdf\PDF::get_license());
 		if(!empty($license)){
-			$this->pdf->set_option('license='.$license);
+			$this->pdf->set_option('license='.\ebi\Conf::get('license', $license));
 		}
 		$this->pdf->set_option('stringformat=utf8'); // 文字列をUTF-8で渡すことをPDFlib に知らせる
 		
@@ -66,6 +62,10 @@ class PDFlib{
 		return $this->K100;
 	}
 	
+	public function current_page_size(){
+		return $this->current_page_size;
+	}
+
 	/**
 	 * フォントを追加する
 	 * @param string $fontfile
@@ -77,6 +77,25 @@ class PDFlib{
 		$alias = empty($alias) ? preg_replace('/^(.+?)\.$/','\\1',$fontfile) : $alias;
 		$this->pdf->set_option(sprintf('FontOutline={%s=%s}',$alias,$fontfile));
 		
+		return $this;
+	}
+
+	/**
+	 * ルーラーの追加
+	 * @return $this
+	 */
+	public function add_ruler(){
+		list($w,$h) = $this->current_page_size();
+		
+		$this->add_line(0, 0, 0, 5);
+		for($mm=0;$mm<=$w;$mm+=1){
+			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0) ? 3 : (($mm % 5 === 0) ? 2 : 1));
+			$this->add_line($mm, 0, $mm, $l);
+		}
+		for($mm=0;$mm<=$h;$mm+=1){
+			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0) ? 3 : (($mm % 5 === 0) ? 2 : 1));
+			$this->add_line(0, $mm, $l, $mm);
+		}
 		return $this;
 	}
 	
@@ -471,25 +490,6 @@ class PDFlib{
 	}
 	
 	/**
-	 * ルーラーの追加
-	 * @return $this
-	 */
-	public function add_ruler(){
-		list($w,$h) = $this->current_page_size;
-		
-		$this->add_line(0, 0, 0, 5);
-		for($mm=0;$mm<=$w;$mm+=1){
-			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0) ? 3 : (($mm % 5 === 0) ? 2 : 1));
-			$this->add_line($mm, 0, $mm, $l);
-		}
-		for($mm=0;$mm<=$h;$mm+=1){
-			$l = ($mm % 100 === 0) ? 5 : (($mm % 10 === 0) ? 3 : (($mm % 5 === 0) ? 2 : 1));
-			$this->add_line(0, $mm, $l, $mm);
-		}
-		return $this;
-	}
-	
-	/**
 	 * テキストボックスの追加
 	 * @param float $x mm
 	 * @param float $y mm
@@ -542,7 +542,6 @@ class PDFlib{
 		
 		$fitoptlist = sprintf(
 			'firstlinedist=ascender lastlinedist=descender '.
-			($this->debug ? 'showborder=true' : '').
 			'rotate=%s '.
 			'verticalalign=%s',
 			$this->rotate2world($angle),
