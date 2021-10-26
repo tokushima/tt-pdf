@@ -193,6 +193,10 @@ class PDFlib{
 		}
 		$image = $this->pdf->load_image('auto',$filepath,'');
 		
+		if($image === 0){
+			throw new \ebi\exception\AccessDeniedException();
+		}
+
 		$dpi = $opt['dpi'] ?? 72;
 		$angle = $opt['rotate'] ?? ($opt['angle'] ?? 0);
 		$width = \ebi\Calc::px2pt($info['width'],$dpi);
