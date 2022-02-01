@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "037523dbf9929ef427c8285060128f22",
+    "content-hash": "a34d2f56440c0c333a52bb5c863b4a16",
     "packages": [
         {
             "name": "setasign/fpdi",
@@ -152,16 +152,16 @@
         },
         {
             "name": "tokushima/ebi",
-            "version": "3.3.1",
+            "version": "3.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tokushima/ebi.git",
-                "reference": "2a3c7fad5a79de639e95d42dafc3a0ff04c6b051"
+                "reference": "d998594907a34efbc6056624e0f984047657ae2d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tokushima/ebi/zipball/2a3c7fad5a79de639e95d42dafc3a0ff04c6b051",
-                "reference": "2a3c7fad5a79de639e95d42dafc3a0ff04c6b051",
+                "url": "https://api.github.com/repos/tokushima/ebi/zipball/d998594907a34efbc6056624e0f984047657ae2d",
+                "reference": "d998594907a34efbc6056624e0f984047657ae2d",
                 "shasum": ""
             },
             "require": {
@@ -187,9 +187,9 @@
                 }
             ],
             "support": {
-                "source": "https://github.com/tokushima/ebi/tree/3.3.1"
+                "source": "https://github.com/tokushima/ebi/tree/3.3.3"
             },
-            "time": "2021-10-10T14:24:55+00:00"
+            "time": "2022-01-12T16:40:29+00:00"
         }
     ],
     "packages-dev": [],
@@ -200,5 +200,5 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.1.0"
 }

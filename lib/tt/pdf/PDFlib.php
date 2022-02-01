@@ -2,6 +2,7 @@
 namespace tt\pdf;
 /**
  * PDFlib
+ * 単位はmm
  * @author tokushima
  * 
  * @see http://www.pdflib.jp/product/download/pdflib/
@@ -9,7 +10,7 @@ namespace tt\pdf;
  * @see https://www.infotek.co.jp/pdflib/pdflib/pdflib_cookbook.html
  */
 class PDFlib{
-	static private $pvfkeys = 0;
+	static private $pvf_keys = 0;
 	
 	private $pdf;
 	private $pages = 0;
@@ -19,12 +20,11 @@ class PDFlib{
 	
 	/**
 	 * 
-	 * @param float $pdfversion 作成するPDFバージョン
-	 * @param boolean $compress PDFオブジェクトを圧縮する （PDF-1.5以降のバージョン）
-	 * @param string license PDFlibのライセンス
-	 * @throws \LogicException
+	 * @param $pdf_version 作成するPDFバージョン
+	 * @param $compress PDFオブジェクトを圧縮する （PDF-1.5以降のバージョン）
+	 * @param $license PDFlibのライセンス
 	 */
-	public function __construct($pdfversion=null, $compress=false, $license=null){
+	public function __construct(?float $pdf_version=null, bool $compress=false, string $license=null){
 		$this->pdf = new \PDFlib();
 		$license = $license ?? \ebi\Conf::get('license');
 		
@@ -34,58 +34,51 @@ class PDFlib{
 		$this->pdf->set_option('stringformat=utf8'); // 文字列をUTF-8で渡すことをPDFlib に知らせる
 		
 		$opt = [];
-		if(!empty($pdfversion)){
-			$opt[] = 'compatibility='.$pdfversion;
+		if(!empty($pdf_version)){
+			$opt[] = 'compatibility='.$pdf_version;
 		}
 		if(!$compress){
 			$opt[] = 'objectstreams=none';
 		}
 		
-		if($this->pdf->begin_document('',implode(' ',$opt)) == 0){
+		if($this->pdf->begin_document('', implode(' ',$opt)) == 0){
 			throw new \LogicException($this->pdf->get_errmsg());
 		}
 	}
 	
 	/**
 	 * #000000をK100とする
-	 * @param boolean $boolean
-	 * @return $this
 	 */
-	public function K100($boolean){
-		$this->K100 = (boolean)$boolean;
+	public function K100(bool $boolean): self{
+		$this->K100 = (bool)$boolean;
 		return $this;
 	}
 	
-	/**
-	 * @return boolean
-	 */
-	public function is_K100(){
+	public function is_K100(): bool{
 		return $this->K100;
 	}
 	
-	public function current_page_size(){
+	/**
+	 * @return [x, y]
+	 */
+	public function current_page_size(): array{
 		return $this->current_page_size;
 	}
 
 	/**
 	 * フォントを追加する
-	 * @param string $fontfile
-	 * @param string $alias
-	 * 
-	 * @return $this
 	 */
-	public function add_font($fontfile,$alias=null){
-		$alias = empty($alias) ? preg_replace('/^(.+?)\.$/','\\1',$fontfile) : $alias;
-		$this->pdf->set_option(sprintf('FontOutline={%s=%s}',$alias,$fontfile));
+	public function add_font(string $font_file, ?string $alias=null): self{
+		$alias = empty($alias) ? preg_replace('/^(.+?)\.$/','\\1',$font_file) : $alias;
+		$this->pdf->set_option(sprintf('FontOutline={%s=%s}',$alias,$font_file));
 		
 		return $this;
 	}
 
 	/**
 	 * ルーラーの追加
-	 * @return $this
 	 */
-	public function add_ruler(){
+	public function add_ruler(): self{
 		list($w,$h) = $this->current_page_size();
 		
 		$this->add_line(0, 0, 0, 5);
@@ -102,69 +95,57 @@ class PDFlib{
 	
 	/**
 	 *　PDFlibでの扱いはptなのでmmからptに計算する
-	 * @return float[]
 	 */
-	private function mm2pt($arg){
+	private function mm2pt(...$args): array{
 		$result = [];
-		foreach((is_array($arg) ? $arg : func_get_args()) as $mm){
+		foreach($args as $mm){
 			$result[] = \ebi\Calc::mm2pt((float)$mm);
 		}
 		return $result;
 	}
 	
 	/**
-	 * Defines the author of the document
-	 * @param string $author
 	 * @return $this
 	 */
-	public function set_author($author){
+	public function set_author(string $author): self{
 		$this->pdf->set_info('Author',$author);
 		return $this;
 	}
 	
 	/**
 	 * Defines the creator of the document
-	 * @param string $creator
-	 * @return $this
 	 */
-	public function set_creator($creator){
+	public function set_creator(string $creator): self{
 		$this->pdf->set_info('Creator',$creator);
 		return $this;
 	}
 	
 	/**
 	 * Defines the title of the document
-	 * @param string $title
-	 * @return $this
 	 */
-	public function set_title($title){
+	public function set_title(string $title): self{
 		$this->pdf->set_info('Title',$title);
 		return $this;
 		
 	}
 	/**
 	 * Defines the subject of the document
-	 * @param string $subject
-	 * @return $this
 	 */
-	public function set_subject($subject){
+	public function set_subject(string $subject): self{
 		$this->pdf->set_info('Subject',$subject);
 		return $this;
 	}
 	
 	/**
 	 * ページを追加
-	 * @param float $width
-	 * @param float $height
-	 * @return $this
 	 */
-	public function add_page($width,$height){
-		list($width,$height) = $this->mm2pt($width,$height);
+	public function add_page(float $width, float $height): self{
+		[$width, $height] = $this->mm2pt($width,$height);
 		
 		$this->end_page();
-		$this->pdf->begin_page_ext($width, $height,'');
+		$this->pdf->begin_page_ext($width, $height, '');
 		
-		$this->current_page_size = [$width,$height];
+		$this->current_page_size = [$width, $height];
 		$this->pages++;
 		
 		return $this;
@@ -172,29 +153,22 @@ class PDFlib{
 	
 	/**
 	 * 画像を追加
-	 * @param float $x mm
-	 * @param float $y mm
-	 * @param string $filepath
-	 * @param mixed{} $opt
 	 *
 	 * opt:
-	 *  integer $angle 回転角度
-	 *  integer $dpi DPI
-	 *
-	 * @throws \ebi\exception\ImageException
-	 * @return $this
+	 *  int $angle 回転角度
+	 *  int $dpi DPI
 	 */
-	public function add_image($x,$y,$filepath,$opt=[]){
-		list($x,$y) = $this->mm2pt($x,$y);
+	public function add_image(float $x, float $y, string $filepath, array $opt=[]): self{
+		[$x, $y] = $this->mm2pt($x,$y);
 		$info = \ebi\Image::get_info($filepath);
 		
 		if($info['mime'] !== 'image/jpeg' && $info['mime'] !== 'image/png'){
-			throw new \ebi\exception\ImageException('image not supported');
+			throw new \tt\pdf\exception\ImageException('image not supported');
 		}
 		$image = $this->pdf->load_image('auto',$filepath,'');
 		
 		if($image === 0){
-			throw new \ebi\exception\AccessDeniedException();
+			throw new \tt\pdf\exception\AccessDeniedException();
 		}
 
 		$dpi = $opt['dpi'] ?? 72;
@@ -209,7 +183,7 @@ class PDFlib{
 			$dpi
 		);
 		
-		list($disp_x,$disp_y) = $this->disp($x, $y, $width, $height, $angle);
+		[$disp_x, $disp_y] = $this->disp($x, $y, $width, $height, $angle);
 		$this->pdf->fit_image($image,$disp_x,$disp_y,$image_opt);
 		
 		return $this;
@@ -217,20 +191,12 @@ class PDFlib{
 	
 	/**
 	 * SVGを追加
-	 * @param float $x mm
-	 * @param float $y mm
-	 * @param float $width mm
-	 * @param float $height mm
-	 * @param string $filepath
-	 * @param mixed{} $opt
 	 *
 	 * opt:
-	 *  integer $angle 回転角度
-	 *
-	 * @return $this
+	 *  int $angle 回転角度
 	 */
-	public function add_svg($x,$y,$width,$height,$filepath,$opt=[]){
-		list($x,$y,$width,$height) = $this->mm2pt($x,$y,$width,$height);
+	public function add_svg(float $x, float $y, float $width, float $height, string $filepath, array $opt=[]): self{
+		[$x, $y, $width, $height] = $this->mm2pt($x,$y,$width,$height);
 		
 		$image = $this->pdf->load_graphics('auto',$filepath,'');
 		
@@ -245,18 +211,22 @@ class PDFlib{
 			$width,$height
 		);
 		
-		list($disp_x,$disp_y) = $this->disp($x, $y, $width, $height, $angle);
+		[$disp_x, $disp_y] = $this->disp($x, $y, $width, $height, $angle);
 		$this->pdf->fit_graphics($image,$disp_x,$disp_y,$image_opt);
 		$this->pdf->close_graphics($image);
 		
 		return $this;
 	}
-	public function add_svg_string($x,$y,$width,$height,$svgstring,$opt=[]){
-		list($x,$y,$width,$height) = $this->mm2pt($x,$y,$width,$height);
+
+	/**
+	 * SVGを文字列で追加
+	 */
+	public function add_svg_string(float $x, float $y, float $width, float $height, string $svg_string, array $opt=[]): self{
+		[$x, $y, $width, $height] = $this->mm2pt($x,$y,$width,$height);
 		
-		$pvf_iamge = 'pvf/image_'.self::$pvfkeys++;
-		$this->pdf->create_pvf($pvf_iamge,$svgstring,'');
-		$image = $this->pdf->load_graphics('auto',$pvf_iamge,'');
+		$pvf_image = 'pvf/image_'.self::$pvf_keys++;
+		$this->pdf->create_pvf($pvf_image, $svg_string, '');
+		$image = $this->pdf->load_graphics('auto',$pvf_image,'');
 		
 		$angle = $opt['rotate'] ?? ($opt['angle'] ?? 0);
 		
@@ -278,24 +248,17 @@ class PDFlib{
 	
 	/**
 	 * PDFを追加
-	 * @param float $x mm
-	 * @param float $y mm
-	 * @param string $filepath
-	 * @param mixed{} $opt
 	 *
 	 * opt:
-	 *  integer $angle 回転角度
+	 *  int $angle 回転角度
 	 *  float $scale 拡大率
-	 *  integer $page_no 追加するページ番号
-	 *
-	 * @throws \ebi\exception\AccessDeniedException
-	 * @return $this
+	 *  int $page_no 追加するページ番号
 	 */
-	public function add_pdf($x,$y,$filepath,$opt=[]){
+	public function add_pdf(float $x, float $y, string $filepath, array $opt=[]): self{
 		if(!is_file($filepath)){
-			throw new \ebi\exception\AccessDeniedException($filepath.' not found');
+			throw new \tt\pdf\exception\AccessDeniedException($filepath.' not found');
 		}
-		list($x,$y) = $this->mm2pt($x,$y);
+		[$x, $y] = $this->mm2pt($x,$y);
 		
 		$angle = $opt['rotate'] ?? ($opt['angle'] ?? 0);
 		$scale = $opt['scale'] ?? 0;
@@ -317,7 +280,7 @@ class PDFlib{
 			$height_pt *= $scale;
 		}
 		
-		list($disp_x,$disp_y) = $this->disp($x, $y, $width_pt, $height_pt, $angle);
+		[$disp_x, $disp_y] = $this->disp($x, $y, $width_pt, $height_pt, $angle);
 		$this->pdf->fit_pdi_page($image,$disp_x,$disp_y,$image_opt);
 		$this->pdf->close_pdi_page($image);
 		
@@ -326,7 +289,7 @@ class PDFlib{
 	
 	private function load_pdf($filepath){
 		if(!is_file($filepath)){
-			throw new \ebi\exception\AccessDeniedException();
+			throw new \tt\pdf\exception\AccessDeniedException();
 		}
 		
 		$id = null;
@@ -341,21 +304,14 @@ class PDFlib{
 	
 	/**
 	 * 線
-	 * @param float $sx mm
-	 * @param float $sy mm
-	 * @param float $ex mm
-	 * @param float $ey mm
-	 * @param mixed{} $opt
 	 *
 	 * opt:
 	 *  string $border_color 線の色 #FFFFFF
 	 *  float $border_width 線の太さ mm
 	 *  float[] $dash 点線の長さ [5,2] mm
-	 *
-	 * @return $this
 	 */
-	public function add_line($sx,$sy,$ex,$ey,$opt=[]){
-		list($sx,$sy,$ex,$ey) = $this->mm2pt($sx,$sy,$ex,$ey);
+	public function add_line(float $sx, float $sy, float $ex, float $ey, array $opt=[]): self{
+		[$sx, $sy, $ex, $ey] = $this->mm2pt($sx,$sy,$ex,$ey);
 		
 		$border_width = $opt['border_width'] ?? null;
 		$border_color = $this->color_val($opt['border_color'] ?? ($opt['color'] ?? '#000000'));
@@ -380,22 +336,15 @@ class PDFlib{
 	
 	/**
 	 * 矩形
-	 * @param float $x mm
-	 * @param float $y mm
-	 * @param float $w mm
-	 * @param float $h mm
-	 * @param mixed{} $opt
-	 *
+	 * 
 	 * opt:
-	 *  boolean $fill true: 塗りつぶす
+	 *  bool $fill true: 塗りつぶす
 	 *  string $color 色 #000000
 	 *  string $border_color 線の色 #FFFFFF
 	 *  float $border_width 線の太さ mm
-	 *
-	 * @return $this
 	 */
-	public function add_rect($x,$y,$width,$height,$opt=[]){
-		list($x,$y,$width,$height) = $this->mm2pt($x,$y,$width,$height);
+	public function add_rect(float $x, float $y, float $width, float $height, array $opt=[]): self{
+		[$x, $y, $width, $height] = $this->mm2pt($x,$y,$width,$height);
 		
 		$style = ($opt['fill'] ?? false) ? 'F' : 'D';
 		$color = $opt['color'] ?? '#000000';
@@ -419,7 +368,7 @@ class PDFlib{
 			$this->pdf->setcolor('fill',$fill_color[0],$fill_color[1],$fill_color[2],$fill_color[3],$fill_color[4] ?? 0);
 		}
 		
-		list($disp_x,$disp_y) = $this->disp($x, $y, $width, $height, 0);
+		[$disp_x, $disp_y] = $this->disp($x, $y, $width, $height, 0);
 		$this->pdf->rect($disp_x,$disp_y,$width,$height);
 		
 		if($style === 'D'){
@@ -436,21 +385,15 @@ class PDFlib{
 	
 	/**
 	 * 円
-	 * @param float $x mm
-	 * @param float $y mm
-	 * @param float $diameter 直径 mm
-	 * @param mixed{} $opt
 	 *
 	 * opt:
-	 *  boolean $fill true: 塗りつぶす
+	 *  bool $fill true: 塗りつぶす
 	 *  string $color 色 #000000
 	 *  string $border_color 線の色 #FFFFFF
 	 *  float $border_width 線の太さ mm
-	 *
-	 * @return $this
 	 */
-	public function add_circle($x,$y,$diameter,$opt=[]){
-		list($x,$y,$diameter) = $this->mm2pt($x,$y,$diameter);
+	public function add_circle(float $x, float $y, float $diameter, array $opt=[]): self{
+		[$x, $y, $diameter] = $this->mm2pt($x,$y,$diameter);
 		
 		$style = ($opt['fill'] ?? false) ? 'F' : 'D';
 		$color = $opt['color'] ?? '#000000';
@@ -474,7 +417,7 @@ class PDFlib{
 			$this->pdf->setcolor('fill',$fill_color[0],$fill_color[1],$fill_color[2],$fill_color[3],$fill_color[4] ?? 0);
 		}
 		
-		list($disp_x,$disp_y) = $this->disp($x, $y, $diameter, $diameter, 0);
+		[$disp_x, $disp_y] = $this->disp($x, $y, $diameter, $diameter, 0);
 		
 		// 左上を原点とする
 		$r = $diameter / 2;
@@ -496,27 +439,19 @@ class PDFlib{
 	
 	/**
 	 * テキストボックスの追加
-	 * @param float $x mm
-	 * @param float $y mm
-	 * @param float $width mm
-	 * @param float $height mm
-	 * @param string $text
-	 * @param mixed{} $opt
 	 *
 	 * opt:
-	 *  integer $align 0: LEFT, 1: CENTER, 2: RIGHT
-	 *  integer $valign 0: TOP, 1: MIDDLE, 2: BOTTOM
+	 *  int $align 0: LEFT, 1: CENTER, 2: RIGHT
+	 *  int $valign 0: TOP, 1: MIDDLE, 2: BOTTOM
 	 *  string $color #000000
 	 *  string $font_family フォントファミリー
 	 *  float $font_size フォントサイズ pt
 	 *  float $text_spacing 文字間隔 pt
 	 *  float $text_leading 行間隔 pt
-	 *  integer $angle 回転角度
-	 *
-	 * @return $this
+	 *  int $angle 回転角度
 	 */
-	public function add_textbox($x,$y,$width,$height,$text,$opt=[]){
-		list($x,$y,$width,$height) = $this->mm2pt($x,$y,$width,$height);
+	public function add_textbox(float $x, float $y, float $width, float $height, string $text, array $opt=[]): self{
+		[$x, $y, $width, $height] = $this->mm2pt($x,$y,$width,$height);
 		
 		$font_family = $opt['font_family'] ?? 'HiraKakuProN-W3';
 		$font_size = $opt['font_size'] ?? 8;
@@ -560,7 +495,7 @@ class PDFlib{
 		return $this;
 	}
 	
-	private function color_val($color_code){
+	private function color_val(array|string $color_code): array{
 		if(is_array($color_code)){
 			return [
 				'cmyk',
@@ -591,15 +526,8 @@ class PDFlib{
 	
 	/**
 	 * PDFlibでの扱いは左下起点なので左上起点から左下起点に計算する(単位はpt)
-	 * 
-	 * @param float $x pt
-	 * @param float $y pt
-	 * @param float $width pt
-	 * @param float $height pt
-	 * @param float $angle
-	 * @return float[] [x1,y1,x2,y2]
 	 */
-	private function disp($x,$y,$width,$height,$angle=0){
+	private function disp(float $x, float $y, float $width, float $height, int $angle=0): array{
 		$base_x = 0;
 		$base_y = $height * -1;
 		
@@ -619,18 +547,15 @@ class PDFlib{
 	
 	/**
 	 * PDFlibでの扱いは左回転なので右回転から左回転に計算する
-	 * @param float $angle
-	 * @return float
 	 */
-	private function rotate2world($angle){
+	private function rotate2world(int $angle): int{
 		return 360 - $angle;
 	}
 	
 	/**
 	 * ファイルに書き出す
-	 * @param string $filename
 	 */
-	public function write($filename){
+	public function write(string $filename): void{
 		$this->close_pdf();
 		
 		$filename = \ebi\Util::path_absolute(getcwd(), $filename);
@@ -641,9 +566,8 @@ class PDFlib{
 	
 	/**
 	 * 出力
-	 * @param string $filename
 	 */
-	public function output($filename=null){
+	public function output(?string $filename=null): void{
 		$this->close_pdf();
 		
 		if(empty($filename)){
@@ -659,40 +583,43 @@ class PDFlib{
 	
 	/**
 	 * ダウンロード
-	 * @param string $filename
 	 */
-	public function download($filename=null){
+	public function download(?string $filename=null): void{
+		$this->close_pdf();
+
 		if(empty($filename)){
 			$filename = date('Ymd_his').'.pdf';
 		}
-		\ebi\HttpFile::attach([$filename,$this->pdf->get_buffer()]);
+		\ebi\HttpFile::attach([$filename, $this->pdf->get_buffer()]);
 	}
 	
-	private function end_page(){
+	private function end_page(): void{
 		if($this->pages > 0){
 			$this->pdf->end_page_ext('');
 		}
 	}
 	
-	private function close_pdf(){
+	private function close_pdf(): void{
+		if($this->pages === 0){
+			throw new \tt\pdf\exception\NoPagesException();
+		}
 		$this->end_page();
 		$this->pdf->end_document('');
 	}
 	
 	/**
-	 * ページサイズ mm
-	 * @param string $pdffile
-	 * @return array [page=>[width,height]]
+	 * 各ページのサイズ
+	 * @return [page=>[width,height]]
 	 */
-	public static function get_page_size($pdffile){
+	public static function get_page_size(string $filename): array{
 		$self = new static();
-		$doc_id = $self->load_pdf($pdffile);
-		$pages = (int)$self->pdf->pcos_get_number($doc_id,'length:pages');
+		$doc_id = $self->load_pdf($filename);
+		$pages = (int)$self->pdf->pcos_get_number($doc_id, 'length:pages');
 		$page_size = [];
 		
 		for($index=0;$index<$pages;$index++){
-			$width = $self->pdf->pcos_get_number($doc_id,sprintf('pages[%d]/width',$index));
-			$height = $self->pdf->pcos_get_number($doc_id,sprintf('pages[%d]/height',$index));
+			$width = $self->pdf->pcos_get_number($doc_id, sprintf('pages[%d]/width',$index));
+			$height = $self->pdf->pcos_get_number($doc_id, sprintf('pages[%d]/height',$index));
 			
 			$page_size[$index + 1] = [
 				\ebi\Calc::pt2mm($width),
@@ -704,13 +631,9 @@ class PDFlib{
 	
 	/**
 	 * ページ毎に抽出
-	 * @param string $pdffile
-	 * @param integer $start start page
-	 * @param integer $end end page
-	 * @throws \ebi\exception\AccessDeniedException
 	 */
-	public static function split($pdffile,$start=1,$end=null,$pdfversion=null){
-		$page_size = self::get_page_size($pdffile);
+	public static function split(string $filename, int $start_page=1, ?int $end_page=null, ?float $pdf_version=null): \Generator{
+		$page_size = self::get_page_size($filename);
 		$num_pages = sizeof($page_size);
 		
 		if(empty($start)){
@@ -721,9 +644,9 @@ class PDFlib{
 		}
 		
 		for($page=$start;$page<=$end;$page++){
-			$inst = new static($pdfversion);
+			$inst = new static($pdf_version);
 			
-			$doc_id = $inst->load_pdf($pdffile);
+			$doc_id = $inst->load_pdf($filename);
 			$image = $inst->pdf->open_pdi_page($doc_id,$page,'');
 			
 			$width_pt = $inst->pdf->info_pdi_page($image,'width','');

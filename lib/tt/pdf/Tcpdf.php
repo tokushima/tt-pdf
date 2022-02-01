@@ -12,7 +12,7 @@ class Tcpdf{
 	private $K100 = false;
 	private $font_names = [];
 	
-	public function __construct($version=null){
+	public function __construct(?float $pdf_version=null){
 		$mb_internal_encoding = mb_internal_encoding();
 		$this->pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
 		mb_internal_encoding($mb_internal_encoding);
@@ -24,48 +24,44 @@ class Tcpdf{
 		$this->pdf->SetAutoPageBreak(false);
 		$this->pdf->setFontSubsetting(true);
 		
-		if(!empty($version)){
-			$this->pdf->setPDFVersion($version);
+		if(!empty($pdf_version)){
+			$this->pdf->setPDFVersion($pdf_version);
 		}
 	}
 	
 	/**
 	 * #000000をK100とする
-	 * @param boolean $boolean
-	 * @return $this
 	 */
-	public function K100($boolean){
+	public function K100(bool $boolean): self{
 		$this->K100 = (boolean)$boolean;
 		return $this;
 	}
 	
-	/**
-	 * @return boolean
-	 */
-	public function is_K100(){
+	public function is_K100(): bool{
 		return $this->K100;
 	}
 
-	public function current_page_size(){
+	/**
+	 * @return [x, y]
+	 */
+	public function current_page_size(): array{
 		return $this->current_page_size;
 	}
 	
 	/**
 	 * フォントを追加する
-	 * @param string $fontfile フォントファイル (***.php)
-	 * @param string $alias 
+	 * @param $fontfile フォントファイル (***.php)
+	 * @param $alias 
 	 * 
 	 * フォントファイルの生成:
 	 *  > vendor/tecnickcom/tcpdf/tools/tcpdf_addfont.php -t TrueTypeUnicode -f 32 -i *****.ttf -o [OUTDIR]
 	 *  -t: TrueTypeUnicode, TrueType, Type1, CID0JP, CID0KR, CID0CS, CID0CT
-	 *  
-	 * @return $this
 	 */
-	public function add_font($fontfile,$alias=null){
+	public function add_font(string $fontfile, ?string $alias=null): self{
 		if(substr($fontfile,-4) !== '.php'){
 			$path = realpath($fontfile);
 			if($path === false){
-				throw \ebi\exception\AccessDeniedException($fontfile.' not found');
+				throw new \tt\pdf\exception\AccessDeniedException($fontfile.' not found');
 			}
 			$dir = dirname($path);
 			$fontfile = (($dir !== '/') ? $dir : '').'/'.
@@ -81,10 +77,9 @@ class Tcpdf{
 	
 	/**
 	 * ルーラーの追加
-	 * @return $this
 	 */
-	public function add_ruler(){
-		list($w,$h) = $this->current_page_size();
+	public function add_ruler(): self{
+		[$w, $h] = $this->current_page_size();
 		
 		$this->add_line(0, 0, 0, 5);
 		for($mm=0;$mm<=$w;$mm+=1){
@@ -100,39 +95,31 @@ class Tcpdf{
 	
 	/**
 	 * Defines the author of the document
-	 * @param string $author
-	 * @return $this
 	 */
-	public function set_author($author){
+	public function set_author(string $author): self{
 		$this->pdf->SetAuthor($author);
 		return $this;
 	}
 	
 	/**
 	 * Defines the creator of the document
-	 * @param string $creator
-	 * @return $this
 	 */
-	public function set_creator($creator){
+	public function set_creator(string $creator): self{
 		$this->pdf->SetCreator($creator);
 		return $this;
 	}
 	
 	/**
 	 * Defines the title of the document
-	 * @param string $title
-	 * @return $this
 	 */
-	public function set_title($title){
+	public function set_title(string $title): self{
 		$this->pdf->SetTitle($title);
 		return $this;
 	}
 	/**
 	 * Defines the subject of the document
-	 * @param string $subject
-	 * @return $this
 	 */
-	public function set_subject($subject){
+	public function set_subject(string $subject): self{
 		$this->pdf->SetSubject($subject);
 		return $this;
 	}
@@ -140,11 +127,8 @@ class Tcpdf{
 	
 	/**
 	 * ページを追加
-	 * @param float $width
-	 * @param float $height
-	 * @return $this
 	 */
-	public function add_page($width,$height){
+	public function add_page(float $width, float $height): self{
 		$this->pdf->AddPage(($width > $height) ? 'L' : 'P',[$width,$height]);
 		$this->current_page_size = [$width,$height];
 		$this->pages++;
@@ -152,7 +136,7 @@ class Tcpdf{
 		return $this;
 	}
 	
-	private function rotate($x,$y,array $opt){
+	private function rotate(float $x, float $y, array $opt): void{
 		if(($angle = $opt['angle'] ?? 0) !== 0){
 			$this->pdf->StartTransform();
 			$this->pdf->Rotate(360 - $angle,$x,$y); // 右回転として計算
@@ -161,23 +145,16 @@ class Tcpdf{
 	
 	/**
 	 * 画像を追加
-	 * @param float $x mm
-	 * @param float $y mm
-	 * @param string $filepath
-	 * @param mixed{} $opt
 	 * 
 	 * opt:
-	 *  integer $angle 回転角度
-	 *  integer $dpi DPI
-	 *  
-	 * @throws \ebi\exception\ImageException
-	 * @return $this
+	 *  int $angle 回転角度
+	 *  int $dpi DPI
 	 */
-	public function add_image($x,$y,$filepath,$opt=[]){
+	public function add_image(float $x, float $y, string $filepath, array $opt=[]): self{
 		$info = \ebi\Image::get_info($filepath);
 		
 		if($info['mime'] !== 'image/jpeg' && $info['mime'] !== 'image/png'){
-			throw new \ebi\exception\ImageException('image not supported');
+			throw new \tt\pdf\exception\ImageException('image not supported');
 		}
 		$this->rotate($x, $y, $opt);
 		
@@ -187,36 +164,33 @@ class Tcpdf{
 		
 		$this->pdf->Image($filepath,$x,$y,$width,$height);
 		$this->pdf->StopTransform();
+
 		return $this;
 	}
 	
 	/**
 	 * SVGを追加
-	 * @param float $x mm
-	 * @param float $y mm
-	 * @param float $width mm
-	 * @param float $height mm
-	 * @param string $filepath
-	 * @param mixed{} $opt
 	 * 
 	 * opt:
 	 *  integer $angle 回転角度
-	 *  
-	 * @return $this
 	 */
-	public function add_svg($x,$y,$width,$height,$filepath,$opt=[]){
+	public function add_svg(float $x, float $y, float $width, float $height, string $filepath, array$opt=[]): self{
 		$this->rotate($x, $y, $opt);
 		
 		$this->pdf->ImageSVG($filepath,$x,$y,$width,$height);
 		
 		$this->pdf->StopTransform();
+
 		return $this;
 	}
 	
-	public function add_svg_string($x,$y,$width,$height,$svgstring,$opt=[]){
+	/**
+	 * SVGを文字列で追加
+	 */
+	public function add_svg_string(float $x, float $y, float $width, float $height, string $svg_string, $opt=[]): self{
 		$this->rotate($x, $y, $opt);
 		
-		$this->pdf->ImageSVG('@'.$svgstring,$x,$y,$width,$height);
+		$this->pdf->ImageSVG('@'.$svg_string,$x,$y,$width,$height);
 		
 		$this->pdf->StopTransform();
 		return $this;
@@ -224,22 +198,16 @@ class Tcpdf{
 	
 	/**
 	 * PDFを追加
-	 * @param float $x mm
-	 * @param float $y mm
-	 * @param string $filepath
-	 * @param mixed{} $opt
 	 * 
 	 * opt:
 	 *  integer $angle 回転角度
 	 *  float $scale 拡大率
 	 *  integer $page_no 追加するページ番号
 	 *  
-	 * @throws \ebi\exception\AccessDeniedException
-	 * @return $this
 	 */
-	public function add_pdf($x,$y,$filepath,$opt=[]){
+	public function add_pdf(float $x, float $y, string $filepath, array $opt=[]): self{
 		if(!is_file($filepath)){
-			throw new \ebi\exception\AccessDeniedException($filepath.' not found');
+			throw new \tt\pdf\exception\AccessDeniedException($filepath.' not found');
 		}
 		$this->rotate($x, $y, $opt);
 		
@@ -262,20 +230,13 @@ class Tcpdf{
 	
 	/**
 	 * 線
-	 * @param float $sx mm
-	 * @param float $sy mm
-	 * @param float $ex mm
-	 * @param float $ey mm
-	 * @param mixed{} $opt 
 	 * 
 	 * opt:
 	 *  string $border_color 線の色 #FFFFFF
 	 *  float $border_width 線の太さ mm
 	 *  float[] $dash 点線の長さ [5,2] mm
-	 *  
-	 * @return $this
 	 */
-	public function add_line($sx,$sy,$ex,$ey,$opt=[]){
+	public function add_line(float $sx, float $sy, float $ex, float $ey, array$opt=[]): self{
 		$border_width = $opt['border_width'] ?? 0.1;
 		$border_color = $this->color_dec($opt['border_color'] ?? ($opt['color'] ?? '#000000'));
 		$style = [
@@ -301,11 +262,6 @@ class Tcpdf{
 	
 	/**
 	 * 矩形
-	 * @param float $x mm
-	 * @param float $y mm
-	 * @param float $width mm
-	 * @param float $height mm
-	 * @param mixed{} $opt
 	 * 
 	 * opt:
 	 *  boolean $fill true: 塗りつぶす
@@ -315,7 +271,7 @@ class Tcpdf{
 	 * 
 	 * @return $this
 	 */
-	public function add_rect($x,$y,$width,$height,$opt=[]){
+	public function add_rect(float $x, float $y, float $width, float $height, array $opt=[]): self{
 		$style = ($opt['fill'] ?? false) ? 'F' : 'D';
 		$color = $opt['color'] ?? '#000000';
 		$color_rgb = $this->color_dec($color);
@@ -341,20 +297,14 @@ class Tcpdf{
 	
 	/**
 	 * 円
-	 * @param float $x mm
-	 * @param float $y mm
-	 * @param float $diameter 直径 mm
-	 * @param mixed{} $opt 
 	 * 
 	 * opt:
-	 *  boolean $fill true: 塗りつぶす
+	 *  bool $fill true: 塗りつぶす
 	 *  string $color 色 #000000 
 	 *  string $border_color 線の色 #FFFFFF
 	 *  float $border_width 線の太さ mm
-	 * 
-	 * @return $this
 	 */
-	public function add_circle($x,$y,$diameter,$opt=[]){
+	public function add_circle(float $x, float $y, float $diameter, array $opt=[]): self{
 		$style = ($opt['fill'] ?? false) ? 'F' : 'D';
 		$color = $opt['color'] ?? '#000000';
 		$color_rgb = $this->color_dec($color);
@@ -387,10 +337,9 @@ class Tcpdf{
 		
 	/**
 	 * カラーモードからRGB（10進数）を返す
-	 * @param string $color_code
-	 * @return integer[] R,G,B
+	 * @return R,G,B
 	 */
-	private function color_dec($color_code){
+	private function color_dec(string $color_code): array{
 		if(is_array($color_code)){
 			return [
 				((float)$color_code[0] ?? 0) * 100,
@@ -414,26 +363,18 @@ class Tcpdf{
 	
 	/**
 	 * テキストボックスの追加
-	 * @param float $x mm
-	 * @param float $y mm
-	 * @param float $width mm
-	 * @param float $height mm
-	 * @param string $text
-	 * @param mixed{} $opt
 	 * 
 	 * opt:
-	 *  integer $align 0: LEFT, 1: CENTER, 2: RIGHT
-	 *  integer $valign 0: TOP, 1: MIDDLE, 2: BOTTOM
+	 *  int $align 0: LEFT, 1: CENTER, 2: RIGHT
+	 *  int $valign 0: TOP, 1: MIDDLE, 2: BOTTOM
 	 *  string $color #000000
 	 *  string $font_family フォントファミリー
 	 *  float $font_size フォントサイズ pt
 	 *  float $text_spacing 文字間隔 pt
 	 *  float $text_leading 行間隔 pt
-	 *  integer $angle 回転角度
-	 *  
-	 * @return $this
+	 *  int $angle 回転角度
 	 */
-	public function add_textbox($x,$y,$width,$height,$text,$opt=[]){
+	public function add_textbox(float $x, float $y, float $width, float $height, string $text, array $opt=[]): self{
 		$this->rotate($x, $y, $opt);
 		
 		$font_family = $opt['font_family'] ?? 'kozminproregular';
@@ -485,9 +426,11 @@ class Tcpdf{
 	
 	/**
 	 * ファイルに書き出す
-	 * @param string $filename
 	 */
-	public function write($filename){
+	public function write(string $filename): void{
+		if($this->pages === 0){
+			throw new \tt\pdf\exception\NoPagesException();
+		}
 		$filename = \ebi\Util::path_absolute(getcwd(), $filename);
 		\ebi\Util::mkdir(dirname($filename));
 		
@@ -496,9 +439,11 @@ class Tcpdf{
 	
 	/**
 	 * 出力
-	 * @param string $filename
 	 */
-	public function output($filename=null){
+	public function output(?string $filename=null): void{
+		if($this->pages === 0){
+			throw new \tt\pdf\exception\NoPagesException();
+		}
 		if(empty($filename)){
 			$filename = date('Ymd_his').'.pdf';
 		}
@@ -507,9 +452,11 @@ class Tcpdf{
 	
 	/**
 	 * ダウンロード
-	 * @param string $filename
 	 */
-	public function download($filename=null){
+	public function download(?string $filename=null): void{
+		if($this->pages === 0){
+			throw new \tt\pdf\exception\NoPagesException();
+		}
 		if(empty($filename)){
 			$filename = date('Ymd_his').'.pdf';
 		}
@@ -518,14 +465,13 @@ class Tcpdf{
 	
 	/**
 	 * ページサイズ mm
-	 * @param string $pdffile
 	 * @return array [page=>[width,height]]
 	 */
-	public static function get_page_size($pdffile){
+	public static function get_page_size(string $filename): array{
 		$pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
 		$page_size = [];
 		
-		for($page=1;$page<=self::set_source($pdf, $pdffile);$page++){
+		for($page=1;$page<=self::set_source($pdf, $filename);$page++){
 			$template_id = $pdf->importPage($page);
 			$size = $pdf->getImportedPageSize($template_id);
 			
@@ -534,9 +480,9 @@ class Tcpdf{
 		return $page_size;
 	}
 	
-	private static function set_source(\setasign\Fpdi\Tcpdf\Fpdi $pdf,$pdffile){
+	private static function set_source(\setasign\Fpdi\Tcpdf\Fpdi $pdf, string $filename): int{
 		try{
-			return $pdf->setSourceFile($pdffile);
+			return $pdf->setSourceFile($filename);
 		}catch(\setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException $e){
 			if($e->getCode() === \setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException::ENCRYPTED){
 				throw new \tt\pdf\exception\EncryptedPdfDocumentException();
@@ -545,19 +491,15 @@ class Tcpdf{
 			}
 			throw $e;
 		}catch(\Exception $e){
-			throw new \ebi\exception\AccessDeniedException();
+			throw new \tt\pdf\exception\AccessDeniedException();
 		}
 	}
 	
 	/**
 	 * ページ毎に抽出
-	 * @param string $pdffile
-	 * @param integer $start start page
-	 * @param integer $end end page
-	 * @throws \ebi\exception\AccessDeniedException
 	 */
-	public static function split($pdffile,$start=1,$end=null,$pdfversion=null){
-		$page_size = self::get_page_size($pdffile);
+	public static function split(string $filename, int $start=1, int $end=null, ?float $pdf_version=null): \Generator{
+		$page_size = self::get_page_size($filename);
 		$num_pages = sizeof($page_size);
 		
 		if(empty($start)){
@@ -567,9 +509,9 @@ class Tcpdf{
 			$end = $num_pages;
 		}
 		for($page=$start;$page<=$end;$page++){
-			$self = new static($pdfversion);
+			$self = new static($pdf_version);
 			
-			self::set_source($self->pdf, $pdffile);
+			self::set_source($self->pdf, $filename);
 			$template_id = $self->pdf->importPage($page);
 			$info = $self->pdf->getImportedPageSize($template_id);
 			
