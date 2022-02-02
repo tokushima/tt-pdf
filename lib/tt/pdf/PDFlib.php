@@ -495,7 +495,10 @@ class PDFlib{
 		return $this;
 	}
 	
-	private function color_val(array|string $color_code): array{
+	/**
+	 * @param mixed $color_code (array|string)
+	 */
+	private function color_val($color_code): array{
 		if(is_array($color_code)){
 			return [
 				'cmyk',
