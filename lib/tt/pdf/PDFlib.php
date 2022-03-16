@@ -3,7 +3,6 @@ namespace tt\pdf;
 /**
  * PDFlib
  * 単位はmm
- * @author tokushima
  * 
  * @see http://www.pdflib.jp/product/download/pdflib/
  * @see https://www.infotek.co.jp/pdflib/pdflib_info.html
@@ -99,7 +98,7 @@ class PDFlib{
 	private function mm2pt(...$args): array{
 		$result = [];
 		foreach($args as $mm){
-			$result[] = \ebi\Calc::mm2pt((float)$mm);
+			$result[] = \tt\image\Calc::mm2pt((float)$mm);
 		}
 		return $result;
 	}
@@ -155,7 +154,7 @@ class PDFlib{
 	 * 画像を追加
 	 *
 	 * opt:
-	 *  int $angle 回転角度
+	 *  int $rotate 回転角度
 	 *  int $dpi DPI
 	 */
 	public function add_image(float $x, float $y, string $filepath, array $opt=[]): self{
@@ -172,18 +171,18 @@ class PDFlib{
 		}
 
 		$dpi = $opt['dpi'] ?? 72;
-		$angle = $opt['rotate'] ?? ($opt['angle'] ?? 0);
-		$width = \ebi\Calc::px2pt($info['width'],$dpi);
-		$height = \ebi\Calc::px2pt($info['height'],$dpi);
+		$rotate = $opt['rotate'] ?? 0;
+		$width = \tt\image\Calc::px2pt($info['width'],$dpi);
+		$height = \tt\image\Calc::px2pt($info['height'],$dpi);
 		
 		$image_opt = sprintf(
 			'rotate=%s '.
 			'dpi=%s',
-			$this->rotate2world($angle),
+			$this->rotate2world($rotate),
 			$dpi
 		);
 		
-		[$disp_x, $disp_y] = $this->disp($x, $y, $width, $height, $angle);
+		[$disp_x, $disp_y] = $this->disp($x, $y, $width, $height, $rotate);
 		$this->pdf->fit_image($image,$disp_x,$disp_y,$image_opt);
 		
 		return $this;
@@ -193,25 +192,25 @@ class PDFlib{
 	 * SVGを追加
 	 *
 	 * opt:
-	 *  int $angle 回転角度
+	 *  int $rotate 回転角度
 	 */
 	public function add_svg(float $x, float $y, float $width, float $height, string $filepath, array $opt=[]): self{
 		[$x, $y, $width, $height] = $this->mm2pt($x,$y,$width,$height);
 		
 		$image = $this->pdf->load_graphics('auto',$filepath,'');
 		
-		$angle = $opt['rotate'] ?? ($opt['angle'] ?? 0);
+		$rotate = $opt['rotate'] ?? 0;
 		
 		$image_opt = sprintf(
 			'rotate=%s '.
 			'boxsize={%s %s} '.
 			'position=center '.
 			'fitmethod=meet',
-			$this->rotate2world($angle),
+			$this->rotate2world($rotate),
 			$width,$height
 		);
 		
-		[$disp_x, $disp_y] = $this->disp($x, $y, $width, $height, $angle);
+		[$disp_x, $disp_y] = $this->disp($x, $y, $width, $height, $rotate);
 		$this->pdf->fit_graphics($image,$disp_x,$disp_y,$image_opt);
 		$this->pdf->close_graphics($image);
 		
@@ -228,18 +227,18 @@ class PDFlib{
 		$this->pdf->create_pvf($pvf_image, $svg_string, '');
 		$image = $this->pdf->load_graphics('auto',$pvf_image,'');
 		
-		$angle = $opt['rotate'] ?? ($opt['angle'] ?? 0);
+		$rotate = $opt['rotate'] ?? 0;
 		
 		$image_opt = sprintf(
 			'rotate=%s '.
 			'boxsize={%s %s} '.
 			'position=center '.
 			'fitmethod=meet',
-			$this->rotate2world($angle),
+			$this->rotate2world($rotate),
 			$width,$height
 		);
 		
-		list($disp_x,$disp_y) = $this->disp($x, $y, $width, $height, $angle);
+		list($disp_x,$disp_y) = $this->disp($x, $y, $width, $height, $rotate);
 		$this->pdf->fit_graphics($image,$disp_x,$disp_y,$image_opt);
 		$this->pdf->close_graphics($image);
 		
@@ -250,7 +249,7 @@ class PDFlib{
 	 * PDFを追加
 	 *
 	 * opt:
-	 *  int $angle 回転角度
+	 *  int $rotate 回転角度
 	 *  float $scale 拡大率
 	 *  int $page_no 追加するページ番号
 	 */
@@ -260,7 +259,7 @@ class PDFlib{
 		}
 		[$x, $y] = $this->mm2pt($x,$y);
 		
-		$angle = $opt['rotate'] ?? ($opt['angle'] ?? 0);
+		$rotate = $opt['rotate'] ?? 0;
 		$scale = $opt['scale'] ?? 0;
 		$page_no = $opt['page_no'] ?? 1;
 
@@ -271,8 +270,8 @@ class PDFlib{
 		$height_pt = $this->pdf->info_pdi_page($image,'height','');
 		
 		$image_opt = '';
-		if(!empty($angle)){
-			$image_opt = sprintf('rotate=%s ',$this->rotate2world($angle));
+		if(!empty($rotate)){
+			$image_opt = sprintf('rotate=%s ',$this->rotate2world($rotate));
 		}
 		if(!empty($scale)){
 			$image_opt = sprintf('scale=%s ',$scale);
@@ -280,7 +279,7 @@ class PDFlib{
 			$height_pt *= $scale;
 		}
 		
-		[$disp_x, $disp_y] = $this->disp($x, $y, $width_pt, $height_pt, $angle);
+		[$disp_x, $disp_y] = $this->disp($x, $y, $width_pt, $height_pt, $rotate);
 		$this->pdf->fit_pdi_page($image,$disp_x,$disp_y,$image_opt);
 		$this->pdf->close_pdi_page($image);
 		
@@ -319,7 +318,7 @@ class PDFlib{
 		$this->pdf->save();
 		
 		$this->pdf->setcolor('fillstroke',$border_color[0],$border_color[1],$border_color[2],$border_color[3],$border_color[4] ?? 0);
-		$this->pdf->setlinewidth(\ebi\Calc::mm2pt($border_width ?? 0.1));
+		$this->pdf->setlinewidth(\tt\image\Calc::mm2pt($border_width ?? 0.1));
 
 		if(isset($opt['dash']) && is_array($opt['dash'])){
 			$this->pdf->set_graphics_option('dasharray={'.implode(' ',$this->mm2pt($opt['dash'])).'}');
@@ -357,7 +356,7 @@ class PDFlib{
 			$border_width = ($border_width === null) ? 0.2 : $border_width;
 			
 			$this->pdf->setcolor('fillstroke',$border_color[0],$border_color[1],$border_color[2],$border_color[3],$border_color[4] ?? 0);
-			$this->pdf->setlinewidth(\ebi\Calc::mm2pt($border_width));
+			$this->pdf->setlinewidth(\tt\image\Calc::mm2pt($border_width));
 			
 			if($style === 'F'){
 				$style = 'FD';
@@ -406,7 +405,7 @@ class PDFlib{
 			$border_width = ($border_width === null) ? 0.2 : $border_width;
 			
 			$this->pdf->setcolor('fillstroke',$border_color[0],$border_color[1],$border_color[2],$border_color[3],$border_color[4] ?? 0);
-			$this->pdf->setlinewidth(\ebi\Calc::mm2pt($border_width));
+			$this->pdf->setlinewidth(\tt\image\Calc::mm2pt($border_width));
 			
 			if($style === 'F'){
 				$style = 'FD';
@@ -448,7 +447,7 @@ class PDFlib{
 	 *  float $font_size フォントサイズ pt
 	 *  float $text_spacing 文字間隔 pt
 	 *  float $text_leading 行間隔 pt
-	 *  int $angle 回転角度
+	 *  int $rotate 回転角度
 	 */
 	public function add_textbox(float $x, float $y, float $width, float $height, string $text, array $opt=[]): self{
 		[$x, $y, $width, $height] = $this->mm2pt($x,$y,$width,$height);
@@ -460,7 +459,7 @@ class PDFlib{
 		$text_leading = $opt['text_leading'] ?? $font_size;
 		$align = $opt['align'] ?? 0;
 		$valign = $opt['valign'] ?? 0;
-		$angle = $opt['angle'] ?? 0;
+		$rotate = $opt['rotate'] ?? $opt['rotate'] ?? 0;
 		
 		$optlist = sprintf(
 			'embedding=true encoding=unicode '.
@@ -484,12 +483,12 @@ class PDFlib{
 			'firstlinedist=ascender lastlinedist=descender '.
 			'rotate=%s '.
 			'verticalalign=%s',
-			$this->rotate2world($angle),
+			$this->rotate2world($rotate),
 			($valign === 0 ? 'top' : ($valign === 1 ? 'center' : 'bottom'))
 		);
 		$textflow = $this->pdf->create_textflow(htmlentities($text, ENT_XML1), $optlist);
 		
-		list($disp_x,$disp_y,$disp_x2,$disp_y2) = $this->disp($x, $y, $width, $height, $angle);
+		list($disp_x,$disp_y,$disp_x2,$disp_y2) = $this->disp($x, $y, $width, $height, $rotate);
 		$this->pdf->fit_textflow($textflow,$disp_x, $disp_y, $disp_x2,$disp_y2,$fitoptlist);
 		
 		return $this;
@@ -530,15 +529,15 @@ class PDFlib{
 	/**
 	 * PDFlibでの扱いは左下起点なので左上起点から左下起点に計算する(単位はpt)
 	 */
-	private function disp(float $x, float $y, float $width, float $height, int $angle=0): array{
+	private function disp(float $x, float $y, float $width, float $height, int $rotate=0): array{
 		$base_x = 0;
 		$base_y = $height * -1;
 		
 		$disp_x = $x;
 		$disp_y = $this->current_page_size[1] - $y;
 		
-		$pos_x = ($base_x * cos($angle / 180 * M_PI)) - ($base_y * sin($angle / 180 * M_PI));
-		$pos_y = ($base_x * sin($angle / 180 * M_PI)) + ($base_y * cos($angle / 180 * M_PI));
+		$pos_x = ($base_x * cos($rotate / 180 * M_PI)) - ($base_y * sin($rotate / 180 * M_PI));
+		$pos_y = ($base_x * sin($rotate / 180 * M_PI)) + ($base_y * cos($rotate / 180 * M_PI));
 		
 		return [
 			$disp_x - $pos_x,
@@ -551,8 +550,8 @@ class PDFlib{
 	/**
 	 * PDFlibでの扱いは左回転なので右回転から左回転に計算する
 	 */
-	private function rotate2world(int $angle): int{
-		return 360 - $angle;
+	private function rotate2world(int $rotate): int{
+		return 360 - $rotate;
 	}
 	
 	/**
@@ -625,8 +624,8 @@ class PDFlib{
 			$height = $self->pdf->pcos_get_number($doc_id, sprintf('pages[%d]/height',$index));
 			
 			$page_size[$index + 1] = [
-				\ebi\Calc::pt2mm($width),
-				\ebi\Calc::pt2mm($height),
+				\tt\image\Calc::pt2mm($width),
+				\tt\image\Calc::pt2mm($height),
 			];
 		}
 		return $page_size;
@@ -655,7 +654,7 @@ class PDFlib{
 			$width_pt = $inst->pdf->info_pdi_page($image,'width','');
 			$height_pt = $inst->pdf->info_pdi_page($image,'height','');
 			
-			$inst->add_page(\ebi\Calc::pt2mm($width_pt), \ebi\Calc::pt2mm($height_pt));
+			$inst->add_page(\tt\image\Calc::pt2mm($width_pt), \tt\image\Calc::pt2mm($height_pt));
 			
 			$inst->pdf->fit_pdi_page($image,0,0,'');
 			$inst->pdf->close_pdi_page($image);
