@@ -159,9 +159,12 @@ class PDFlib{
 	 */
 	public function add_image(float $x, float $y, string $filepath, array $opt=[]): self{
 		[$x, $y] = $this->mm2pt($x,$y);
-		$info = \ebi\Image::get_info($filepath);
+		$info = getimagesize($filepath);
+		$mime = $info['mime'] ?? null;
+		$image_width = $info[0] ?? 0;
+		$image_height = $info[1] ?? 0;
 		
-		if($info['mime'] !== 'image/jpeg' && $info['mime'] !== 'image/png'){
+		if($mime !== 'image/jpeg' && $mime !== 'image/png'){
 			throw new \tt\pdf\exception\ImageException('image not supported');
 		}
 		$image = $this->pdf->load_image('auto',$filepath,'');
@@ -172,8 +175,8 @@ class PDFlib{
 
 		$dpi = $opt['dpi'] ?? 72;
 		$rotate = $opt['rotate'] ?? 0;
-		$width = \tt\image\Calc::px2pt($info['width'],$dpi);
-		$height = \tt\image\Calc::px2pt($info['height'],$dpi);
+		$width = \tt\image\Calc::px2pt($image_width, $dpi);
+		$height = \tt\image\Calc::px2pt($image_height, $dpi);
 		
 		$image_opt = sprintf(
 			'rotate=%s '.
@@ -343,14 +346,32 @@ class PDFlib{
 	 *  float $border_width 線の太さ mm
 	 */
 	public function add_rect(float $x, float $y, float $width, float $height, array $opt=[]): self{
+		$this->pdf->save();
+
 		[$x, $y, $width, $height] = $this->mm2pt($x,$y,$width,$height);
 		
+		$style = $this->set_style($opt);
+		
+
+
+		[$disp_x, $disp_y] = $this->disp($x, $y, $width, $height, 0);
+		$this->pdf->rect($disp_x,$disp_y,$width,$height);
+		
+
+
+		$this->draw_style($style);
+
+		$this->pdf->restore();
+		
+		return $this;
+	}
+	
+	private function set_style(array $opt){
 		$style = ($opt['fill'] ?? false) ? 'F' : 'D';
 		$color = $opt['color'] ?? '#000000';
 		$border_width = $opt['border_width'] ?? null;
 		$border_color = $this->color_val($opt['border_color'] ?? $color);
-		
-		$this->pdf->save();
+
 		
 		if($border_width !== null || $style === 'D'){
 			$border_width = ($border_width === null) ? 0.2 : $border_width;
@@ -366,10 +387,10 @@ class PDFlib{
 			$fill_color = $this->color_val($color);
 			$this->pdf->setcolor('fill',$fill_color[0],$fill_color[1],$fill_color[2],$fill_color[3],$fill_color[4] ?? 0);
 		}
-		
-		[$disp_x, $disp_y] = $this->disp($x, $y, $width, $height, 0);
-		$this->pdf->rect($disp_x,$disp_y,$width,$height);
-		
+		return $style;
+	}
+
+	private function draw_style(string $style){
 		if($style === 'D'){
 			$this->pdf->stroke();
 		}else if($style === 'F'){
@@ -377,11 +398,35 @@ class PDFlib{
 		}else{
 			$this->pdf->fill_stroke();
 		}
+	}
+
+	/**
+	 * 三角形
+	 * opt:
+	 *  bool $fill true: 塗りつぶす
+	 *  string $color 色 #000000
+	 *  string $border_color 線の色 #FFFFFF
+	 *  float $border_width 線の太さ mm
+	 */
+	public function add_triangle(float $x1, float $y1, float $x2, float $y2, float $x3, float $y3, array $opt=[]): self{		
+		$this->pdf->save();
+
+		[$x1, $y1, $x2, $y2, $x3, $y3] = $this->mm2pt($x1, $y1, $x2, $y2, $x3, $y3);
+		
+		$style = $this->set_style($opt);
+
+		$this->pdf->moveto($x1, $this->current_page_size[1] - $y1);
+		$this->pdf->lineto($x2, $this->current_page_size[1] - $y2);
+		$this->pdf->lineto($x3, $this->current_page_size[1] - $y3);
+		$this->pdf->closepath();
+
+		$this->draw_style($style);
+
 		$this->pdf->restore();
 		
 		return $this;
 	}
-	
+
 	/**
 	 * 円
 	 *
@@ -391,30 +436,11 @@ class PDFlib{
 	 *  string $border_color 線の色 #FFFFFF
 	 *  float $border_width 線の太さ mm
 	 */
-	public function add_circle(float $x, float $y, float $diameter, array $opt=[]): self{
-		[$x, $y, $diameter] = $this->mm2pt($x,$y,$diameter);
-		
-		$style = ($opt['fill'] ?? false) ? 'F' : 'D';
-		$color = $opt['color'] ?? '#000000';
-		$border_width = $opt['border_width'] ?? null;
-		$border_color = $this->color_val($opt['border_color'] ?? $color);
-		
+	public function add_circle(float $x, float $y, float $diameter, array $opt=[]): self{				
 		$this->pdf->save();
-		
-		if($border_width !== null || $style === 'D'){
-			$border_width = ($border_width === null) ? 0.2 : $border_width;
-			
-			$this->pdf->setcolor('fillstroke',$border_color[0],$border_color[1],$border_color[2],$border_color[3],$border_color[4] ?? 0);
-			$this->pdf->setlinewidth(\tt\image\Calc::mm2pt($border_width));
-			
-			if($style === 'F'){
-				$style = 'FD';
-			}
-		}
-		if($style[0] === 'F'){
-			$fill_color = $this->color_val($color);
-			$this->pdf->setcolor('fill',$fill_color[0],$fill_color[1],$fill_color[2],$fill_color[3],$fill_color[4] ?? 0);
-		}
+
+		[$x, $y, $diameter] = $this->mm2pt($x,$y,$diameter);		
+		$style = $this->set_style($opt);
 		
 		[$disp_x, $disp_y] = $this->disp($x, $y, $diameter, $diameter, 0);
 		
@@ -424,13 +450,7 @@ class PDFlib{
 		$disp_y = $disp_y + $r;
 		$this->pdf->circle($disp_x,$disp_y,$r);
 		
-		if($style === 'D'){
-			$this->pdf->stroke();
-		}else if($style === 'F'){
-			$this->pdf->fill();
-		}else{
-			$this->pdf->fill_stroke();
-		}
+		$this->draw_style($style);
 		$this->pdf->restore();
 		
 		return $this;
