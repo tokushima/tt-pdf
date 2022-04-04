@@ -17,13 +17,7 @@ class PDFlib{
 	private $K100 = false;
 	private $load_pdf = [];
 	
-	/**
-	 * 
-	 * @param $pdf_version 作成するPDFバージョン
-	 * @param $compress PDFオブジェクトを圧縮する （PDF-1.5以降のバージョン）
-	 * @param $license PDFlibのライセンス
-	 */
-	public function __construct(?float $pdf_version=null, bool $compress=false, string $license=null){
+	public function __construct(?float $pdf_version=null, bool $optimize=true, bool $compress=true){
 		$this->pdf = new \PDFlib();
 		$license = $license ?? \ebi\Conf::get('license');
 		
@@ -36,8 +30,11 @@ class PDFlib{
 		if(!empty($pdf_version)){
 			$opt[] = 'compatibility='.$pdf_version;
 		}
-		if(!$compress){
+		if($compress === false){
 			$opt[] = 'objectstreams=none';
+		}
+		if($optimize === true){
+			$opt[] = 'optimize=true';
 		}
 		
 		if($this->pdf->begin_document('', implode(' ',$opt)) == 0){
