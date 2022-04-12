@@ -146,6 +146,10 @@ class PDFlib{
 		
 		return $this;
 	}
+
+	public function number_of_pages(): int{
+		return $this->pages;
+	}
 	
 	/**
 	 * 画像を追加
