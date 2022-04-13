@@ -373,8 +373,12 @@ class PDFlib{
 		$color = $opt['color'] ?? '#000000';
 		$border_width = $opt['border_width'] ?? null;
 		$border_color = $this->color_val($opt['border_color'] ?? $color);
-
+		$opacity = $opt['opacity'] ?? null;
 		
+		if(!empty($opacity)){
+			$gstate = $this->pdf->create_gstate('opacityfill='.$opacity);
+			$this->pdf->set_gstate($gstate);
+		}
 		if($border_width !== null || $style === 'D'){
 			$border_width = ($border_width === null) ? 0.2 : $border_width;
 			

@@ -152,16 +152,16 @@
         },
         {
             "name": "tokushima/ebi",
-            "version": "3.4.2",
+            "version": "3.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tokushima/ebi.git",
-                "reference": "845d45b53b28d5cd150446bab2883792429336ae"
+                "reference": "7e2005ee0d1bbe043d827bf44eaf666d4986d707"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tokushima/ebi/zipball/845d45b53b28d5cd150446bab2883792429336ae",
-                "reference": "845d45b53b28d5cd150446bab2883792429336ae",
+                "url": "https://api.github.com/repos/tokushima/ebi/zipball/7e2005ee0d1bbe043d827bf44eaf666d4986d707",
+                "reference": "7e2005ee0d1bbe043d827bf44eaf666d4986d707",
                 "shasum": ""
             },
             "require": {
@@ -187,9 +187,9 @@
                 }
             ],
             "support": {
-                "source": "https://github.com/tokushima/ebi/tree/3.4.2"
+                "source": "https://github.com/tokushima/ebi/tree/3.5.2"
             },
-            "time": "2022-03-07T16:48:40+00:00"
+            "time": "2022-04-13T02:55:04+00:00"
         },
         {
             "name": "tokushima/tt-image",
