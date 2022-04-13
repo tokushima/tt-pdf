@@ -349,17 +349,18 @@ class PDFlib{
 	public function add_rect(float $x, float $y, float $width, float $height, array $opt=[]): self{
 		$this->pdf->save();
 
+		if(($opt['fill'] ?? false) === false){
+			$opt['border_width'] = $opt['border_width'] ?? $border_width ?? 0.1;
+			$bw = $opt['border_width'];
+			[$x, $y, $width, $height] = [$x + ($bw / 2), $y + ($bw / 2), $width - $bw, $height - $bw];
+		}
 		[$x, $y, $width, $height] = $this->mm2pt($x,$y,$width,$height);
 		
 		$style = $this->set_style($opt);
 		
-
-
 		[$disp_x, $disp_y] = $this->disp($x, $y, $width, $height, 0);
 		$this->pdf->rect($disp_x,$disp_y,$width,$height);
 		
-
-
 		$this->draw_style($style);
 
 		$this->pdf->restore();
