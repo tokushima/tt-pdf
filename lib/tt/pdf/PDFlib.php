@@ -376,7 +376,7 @@ class PDFlib{
 		$opacity = $opt['opacity'] ?? null;
 		
 		if(!empty($opacity)){
-			$gstate = $this->pdf->create_gstate('opacityfill='.$opacity);
+			$gstate = $this->pdf->create_gstate('opacityfill='.$opacity.' opacitystroke='.$opacity);
 			$this->pdf->set_gstate($gstate);
 		}
 		if($border_width !== null || $style === 'D'){
