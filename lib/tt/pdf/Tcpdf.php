@@ -151,16 +151,19 @@ class Tcpdf{
 	 *  int $dpi DPI
 	 */
 	public function add_image(float $x, float $y, string $filepath, array $opt=[]): self{
-		$info = \ebi\Image::get_info($filepath);
+		$info = getimagesize($filepath);
+		$mime = $info['mime'] ?? null;
+		$image_width = $info[0];
+		$image_height = $info[1];
 		
-		if($info['mime'] !== 'image/jpeg' && $info['mime'] !== 'image/png'){
+		if($mime !== 'image/jpeg' && $mime !== 'image/png'){
 			throw new \tt\pdf\exception\ImageException('image not supported');
 		}
 		$this->rotate($x, $y, $opt);
 		
 		$dpi = $opt['dpi'] ?? 72;
-		$width = ($info['width'] / $dpi * 25.4);
-		$height = ($info['height'] / $dpi * 25.4);
+		$width = ($image_width / $dpi * 25.4);
+		$height = ($image_height / $dpi * 25.4);
 		
 		$this->pdf->Image($filepath,$x,$y,$width,$height);
 		$this->pdf->StopTransform();
