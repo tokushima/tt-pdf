@@ -16,8 +16,9 @@ class PDFlib{
 	private $current_page_size = [0,0];
 	private $K100 = false;
 	private $load_pdf = [];
+	private $closed = false;
 	
-	public function __construct(?float $pdf_version=null, bool $optimize=true, bool $compress=true){
+	public function __construct(string $filename, ?float $pdf_version=null){
 		$this->pdf = new \PDFlib();
 		$license = $license ?? \ebi\Conf::get('license');
 		
@@ -26,22 +27,28 @@ class PDFlib{
 		}
 		$this->pdf->set_option('stringformat=utf8'); // 文字列をUTF-8で渡すことをPDFlib に知らせる
 		
-		$opt = [];
+		$opt = ['optimize=true'];
 		if(!empty($pdf_version)){
 			$opt[] = 'compatibility='.$pdf_version;
 		}
-		if($compress === false){
-			$opt[] = 'objectstreams=none';
-		}
-		if($optimize === true){
-			$opt[] = 'optimize=true';
-		}
-		
-		if($this->pdf->begin_document('', implode(' ',$opt)) == 0){
+
+		if(!empty($filename)){
+			$filename = \ebi\Util::path_absolute(getcwd(), $filename);
+			\ebi\Util::file_write($filename, '');
+
+			if(!is_file($filename)){
+				throw new \ebi\exception\AccessDeniedException(sprintf('%s が作成できませんでした', $filename));
+			}
+		}		
+		if($this->pdf->begin_document($filename, implode(' ',$opt)) == 0){
 			throw new \LogicException($this->pdf->get_errmsg());
 		}
 	}
-	
+
+	public function __destruct(){
+		$this->close_pdf();
+	}
+
 	/**
 	 * #000000をK100とする
 	 */
@@ -99,10 +106,10 @@ class PDFlib{
 		}
 		return $result;
 	}
-	
+
 	/**
-	 * @return $this
-	 */
+	 * Defines the author of the document
+	 */	
 	public function set_author(string $author): self{
 		$this->pdf->set_info('Author',$author);
 		return $this;
@@ -580,59 +587,32 @@ class PDFlib{
 		return 360 - $rotate;
 	}
 	
-	/**
-	 * ファイルに書き出す
-	 */
-	public function write(string $filename): void{
-		$this->close_pdf();
-		
-		$filename = \ebi\Util::path_absolute(getcwd(), $filename);
-		\ebi\Util::mkdir(dirname($filename));
-		
-		\ebi\Util::file_write($filename, $this->pdf->get_buffer());
-	}
-	
-	/**
-	 * 出力
-	 */
-	public function output(?string $filename=null): void{
-		$this->close_pdf();
-		
-		if(empty($filename)){
-			$filename = date('Ymd_his').'.pdf';
-		}
-		$buf = $this->pdf->get_buffer();
-		header('Content-type: application/pdf');
-		header('Content-Length: '.strlen($buf));
-		header('Content-Disposition: inline; filename='.$filename);
-		
-		print($buf);
-	}
-	
-	/**
-	 * ダウンロード
-	 */
-	public function download(?string $filename=null): void{
-		$this->close_pdf();
-
-		if(empty($filename)){
-			$filename = date('Ymd_his').'.pdf';
-		}
-		\ebi\HttpFile::attach([$filename, $this->pdf->get_buffer()]);
-	}
-	
 	private function end_page(): void{
 		if($this->pages > 0){
 			$this->pdf->end_page_ext('');
 		}
 	}
 	
+	/**
+	 * PDFドキュメントを閉じてファイルに書き出す
+	 */
 	private function close_pdf(): void{
-		if($this->pages === 0){
-			throw new \tt\pdf\exception\NoPagesException();
+		if(!$this->closed){
+			if($this->pages === 0){
+				throw new \tt\pdf\exception\NoPagesException();
+			}
+			$this->end_page();
+			$this->pdf->end_document('');
+
+			$this->closed = true;
 		}
-		$this->end_page();
-		$this->pdf->end_document('');
+	}
+	
+	/**
+	 * PDFドキュメントを閉じてファイルに書き出す
+	 */
+	public function write(): void{
+		$this->close_pdf();
 	}
 	
 	/**
@@ -640,14 +620,14 @@ class PDFlib{
 	 * @return [page=>[width,height]]
 	 */
 	public static function get_page_size(string $filename): array{
-		$self = new static();
+		$self = new static('');
 		$doc_id = $self->load_pdf($filename);
 		$pages = (int)$self->pdf->pcos_get_number($doc_id, 'length:pages');
 		$page_size = [];
 		
 		for($index=0;$index<$pages;$index++){
-			$width = $self->pdf->pcos_get_number($doc_id, sprintf('pages[%d]/width',$index));
-			$height = $self->pdf->pcos_get_number($doc_id, sprintf('pages[%d]/height',$index));
+			$width = $self->pdf->pcos_get_number($doc_id, sprintf('pages[%d]/width', $index));
+			$height = $self->pdf->pcos_get_number($doc_id, sprintf('pages[%d]/height', $index));
 			
 			$page_size[$index + 1] = [
 				\tt\image\Calc::pt2mm($width),
@@ -656,36 +636,40 @@ class PDFlib{
 		}
 		return $page_size;
 	}
+
+	/**
+	 * PDFのバージョンを抽出
+	 */
+	public static function version(string $filename): float{
+		$self = new static('');
+		$doc_id = $self->load_pdf($filename);
+		$pdf_version = (float)$self->pdf->pcos_get_string($doc_id, 'pdfversionstring');
+
+		return $pdf_version;
+	}
 	
 	/**
-	 * ページ毎に抽出
+	 * 部分的にコピーする
 	 */
-	public static function split(string $filename, int $start_page=1, ?int $end_page=null, ?float $pdf_version=null): \Generator{
-		$page_size = self::get_page_size($filename);
-		$num_pages = sizeof($page_size);
-		
-		if(empty($start)){
-			$start = 1;
+	public static function copy(string $from_filename, string $to_filename, int $start_page, ?int $end_page=null, $pdf_version=1.6){
+		$self = new static($to_filename, $pdf_version);
+		$doc_id = $self->load_pdf($from_filename);
+
+		if($end_page === null){
+			$end_page = (int)$self->pdf->pcos_get_number($doc_id, 'length:pages');
 		}
-		if(empty($end) || $num_pages < $end){
-			$end = $num_pages;
+
+		for($page=$start_page; $page<=$end_page; $page++){
+			$index = $page - 1;
+
+			$width_pt = $self->pdf->pcos_get_number($doc_id, sprintf('pages[%d]/width', $index));
+			$height_pt = $self->pdf->pcos_get_number($doc_id, sprintf('pages[%d]/height', $index));
+			$image = $self->pdf->open_pdi_page($doc_id, $page, '');
+
+			$self->add_page(\tt\image\Calc::pt2mm($width_pt), \tt\image\Calc::pt2mm($height_pt));
+			$self->pdf->fit_pdi_page($image, 0, 0, '');
+			$self->pdf->close_pdi_page($image);
 		}
-		
-		for($page=$start;$page<=$end;$page++){
-			$inst = new static($pdf_version);
-			
-			$doc_id = $inst->load_pdf($filename);
-			$image = $inst->pdf->open_pdi_page($doc_id,$page,'');
-			
-			$width_pt = $inst->pdf->info_pdi_page($image,'width','');
-			$height_pt = $inst->pdf->info_pdi_page($image,'height','');
-			
-			$inst->add_page(\tt\image\Calc::pt2mm($width_pt), \tt\image\Calc::pt2mm($height_pt));
-			
-			$inst->pdf->fit_pdi_page($image,0,0,'');
-			$inst->pdf->close_pdi_page($image);
-			
-			yield $page=>$inst;
-		}
+		$self->write();
 	}
 }
