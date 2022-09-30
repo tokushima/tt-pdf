@@ -651,8 +651,8 @@ class PDFlib{
 	/**
 	 * 部分的にコピーする
 	 */
-	public static function copy(string $from_filename, string $to_filename, int $start_page, ?int $end_page=null, $pdf_version=1.6){
-		$self = new static($to_filename, $pdf_version);
+	public static function copy(string $from_filename, string $to_filename, int $start_page, ?int $end_page=null): void{
+		$self = new static($to_filename, self::version($from_filename));
 		$doc_id = $self->load_pdf($from_filename);
 
 		if($end_page === null){
