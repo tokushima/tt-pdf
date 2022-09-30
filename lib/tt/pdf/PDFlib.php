@@ -45,10 +45,6 @@ class PDFlib{
 		}
 	}
 
-	public function __destruct(){
-		$this->close_pdf();
-	}
-
 	/**
 	 * #000000をK100とする
 	 */
@@ -592,11 +588,11 @@ class PDFlib{
 			$this->pdf->end_page_ext('');
 		}
 	}
-	
+		
 	/**
 	 * PDFドキュメントを閉じてファイルに書き出す
 	 */
-	private function close_pdf(): void{
+	public function write(): void{
 		if(!$this->closed){
 			if($this->pages === 0){
 				throw new \tt\pdf\exception\NoPagesException();
@@ -606,13 +602,6 @@ class PDFlib{
 
 			$this->closed = true;
 		}
-	}
-	
-	/**
-	 * PDFドキュメントを閉じてファイルに書き出す
-	 */
-	public function write(): void{
-		$this->close_pdf();
 	}
 	
 	/**
