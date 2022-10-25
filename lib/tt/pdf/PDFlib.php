@@ -31,17 +31,9 @@ class PDFlib{
 		if(!empty($pdf_version)){
 			$opt[] = 'compatibility='.$pdf_version;
 		}
-
-		if(!empty($filename)){
-			$filename = \ebi\Util::path_absolute(getcwd(), $filename);
-			\ebi\Util::file_write($filename, '');
-
-			if(!is_file($filename)){
-				throw new \ebi\exception\AccessDeniedException(sprintf('%s が作成できませんでした', $filename));
-			}
-		}		
+		
 		if($this->pdf->begin_document($filename, implode(' ',$opt)) == 0){
-			throw new \LogicException($this->pdf->get_errmsg());
+			throw new \ebi\exception\AccessDeniedException($this->pdf->get_errmsg());
 		}
 	}
 
