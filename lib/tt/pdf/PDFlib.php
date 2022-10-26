@@ -31,7 +31,8 @@ class PDFlib{
 		if(!empty($pdf_version)){
 			$opt[] = 'compatibility='.$pdf_version;
 		}
-		
+
+		\ebi\Util::mkdir(dirname($filename));
 		if($this->pdf->begin_document($filename, implode(' ',$opt)) == 0){
 			throw new \ebi\exception\AccessDeniedException($this->pdf->get_errmsg());
 		}
