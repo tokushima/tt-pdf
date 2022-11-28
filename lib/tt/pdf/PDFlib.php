@@ -9,14 +9,14 @@ namespace tt\pdf;
  * @see https://www.infotek.co.jp/pdflib/pdflib/pdflib_cookbook.html
  */
 class PDFlib{
-	static private $pvf_keys = 0;
+	static private int $pvf_keys = 0;
 	
-	private $pdf;
-	private $pages = 0;
-	private $current_page_size = [0,0];
-	private $K100 = false;
-	private $load_pdf = [];
-	private $closed = false;
+	private \PDFlib $pdf;
+	private int $pages = 0;
+	private array $current_page_size = [0,0];
+	private bool $K100 = false;
+	private array $load_pdf = [];
+	private bool $closed = false;
 	
 	public function __construct(string $filename, ?float $pdf_version=null){
 		$this->pdf = new \PDFlib();
@@ -36,6 +36,28 @@ class PDFlib{
 		if($this->pdf->begin_document($filename, implode(' ',$opt)) == 0){
 			throw new \ebi\exception\AccessDeniedException($this->pdf->get_errmsg());
 		}
+	}
+
+	public static function font_check(string $text, string $font_family, int $font_size=8): bool{
+		$optlist = sprintf(
+			'embedding=true encoding=unicode '.
+			'fontname=%s '.
+			'fontsize=%s '.
+			'hyphenchar=none '.
+			'charref=true ',
+			$font_family,
+			$font_size
+		);
+
+		$pdf = new \PDFlib();
+		$pdf->set_option('stringformat=utf8');
+		$pdf->begin_document('', '');
+		$pdf->begin_page_ext(100, 100, '');
+		$textflow = $pdf->create_textflow(htmlentities($text, ENT_XML1), $optlist);
+		$pdf->end_page_ext('');
+		$pdf->end_document('');
+
+		return ($textflow !== 0);
 	}
 
 	/**
@@ -71,7 +93,7 @@ class PDFlib{
 	 * ルーラーの追加
 	 */
 	public function add_ruler(): self{
-		list($w,$h) = $this->current_page_size();
+		[$w, $h] = $this->current_page_size();
 		
 		$this->add_line(0, 0, 0, 5);
 		for($mm=0;$mm<=$w;$mm+=1){
@@ -238,7 +260,7 @@ class PDFlib{
 			$width,$height
 		);
 		
-		list($disp_x,$disp_y) = $this->disp($x, $y, $width, $height, $rotate);
+		[$disp_x, $disp_y] = $this->disp($x, $y, $width, $height, $rotate);
 		$this->pdf->fit_graphics($image,$disp_x,$disp_y,$image_opt);
 		$this->pdf->close_graphics($image);
 		
@@ -510,7 +532,10 @@ class PDFlib{
 		);
 		$textflow = $this->pdf->create_textflow(htmlentities($text, ENT_XML1), $optlist);
 		
-		list($disp_x,$disp_y,$disp_x2,$disp_y2) = $this->disp($x, $y, $width, $height, $rotate);
+		if($textflow === 0){
+			throw new \tt\pdf\exception\InvalidTextOptionException('Invalid Text Option: ('.$optlist.'), Value: '.$text);
+		}
+		[$disp_x, $disp_y, $disp_x2, $disp_y] = $this->disp($x, $y, $width, $height, $rotate);
 		$this->pdf->fit_textflow($textflow,$disp_x, $disp_y, $disp_x2,$disp_y2,$fitoptlist);
 		
 		return $this;

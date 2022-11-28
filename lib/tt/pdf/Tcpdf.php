@@ -2,15 +2,13 @@
 namespace tt\pdf;
 /**
  * Tcpdf(Fpdi)
- * @author tokushima
- *
  */
 class Tcpdf{
-	private $pdf;
-	private $pages = 0;
-	private $current_page_size = [0,0];	
-	private $K100 = false;
-	private $font_names = [];
+	private \setasign\Fpdi\Tcpdf\Fpdi $pdf;
+	private int $pages = 0;
+	private array $current_page_size = [0,0];	
+	private bool $K100 = false;
+	private array $font_names = [];
 	
 	public function __construct(?float $pdf_version=null){
 		$mb_internal_encoding = mb_internal_encoding();
