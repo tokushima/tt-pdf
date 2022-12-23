@@ -432,8 +432,12 @@ class Tcpdf{
 		if($this->pages === 0){
 			throw new \tt\pdf\exception\NoPagesException();
 		}
-		$filename = \ebi\Util::path_absolute(getcwd(), $filename);
-		\ebi\Util::mkdir(dirname($filename));
+		if(!(substr($filename, 0, 1) === '/' || strpos($filename, '://') !== false)){
+			$filename = getcwd().'/'.$filename;
+		}
+		if(!is_dir(dirname($filename))){
+			mkdir(dirname($filename), 0777, true);
+		}
 		
 		$this->pdf->Output($filename,'F');
 	}

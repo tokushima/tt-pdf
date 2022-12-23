@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eed525b61bf4f788aedb5f03b8bef542",
+    "content-hash": "3867d1d870d8553f731a4caf7e6a8318",
     "packages": [
         {
             "name": "setasign/fpdi",
@@ -80,16 +80,16 @@
         },
         {
             "name": "tecnickcom/tcpdf",
-            "version": "6.4.4",
+            "version": "6.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/TCPDF.git",
-                "reference": "42cd0f9786af7e5db4fcedaa66f717b0d0032320"
+                "reference": "e3cffc9bcbc76e89e167e9eb0bbda0cab7518459"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/42cd0f9786af7e5db4fcedaa66f717b0d0032320",
-                "reference": "42cd0f9786af7e5db4fcedaa66f717b0d0032320",
+                "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/e3cffc9bcbc76e89e167e9eb0bbda0cab7518459",
+                "reference": "e3cffc9bcbc76e89e167e9eb0bbda0cab7518459",
                 "shasum": ""
             },
             "require": {
@@ -140,7 +140,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/TCPDF/issues",
-                "source": "https://github.com/tecnickcom/TCPDF/tree/6.4.4"
+                "source": "https://github.com/tecnickcom/TCPDF/tree/6.6.2"
             },
             "funding": [
                 {
@@ -148,61 +148,20 @@
                     "type": "custom"
                 }
             ],
-            "time": "2021-12-31T08:39:24+00:00"
-        },
-        {
-            "name": "tokushima/ebi",
-            "version": "3.5.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/tokushima/ebi.git",
-                "reference": "7e2005ee0d1bbe043d827bf44eaf666d4986d707"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/tokushima/ebi/zipball/7e2005ee0d1bbe043d827bf44eaf666d4986d707",
-                "reference": "7e2005ee0d1bbe043d827bf44eaf666d4986d707",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mbstring": "*",
-                "php": ">=7.3.0"
-            },
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "main.php"
-                ],
-                "psr-4": {
-                    "ebi\\": "lib/ebi/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "tokushima"
-                }
-            ],
-            "support": {
-                "source": "https://github.com/tokushima/ebi/tree/3.5.2"
-            },
-            "time": "2022-04-13T02:55:04+00:00"
+            "time": "2022-12-17T10:28:59+00:00"
         },
         {
             "name": "tokushima/tt-image",
-            "version": "0.1.5",
+            "version": "0.1.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tokushima/tt-image.git",
-                "reference": "b66f245e4cafbbfb0bcadce28806ea625744d1e8"
+                "reference": "096e37a873f2b8f0e34aafbccde7144a4275ec52"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tokushima/tt-image/zipball/b66f245e4cafbbfb0bcadce28806ea625744d1e8",
-                "reference": "b66f245e4cafbbfb0bcadce28806ea625744d1e8",
+                "url": "https://api.github.com/repos/tokushima/tt-image/zipball/096e37a873f2b8f0e34aafbccde7144a4275ec52",
+                "reference": "096e37a873f2b8f0e34aafbccde7144a4275ec52",
                 "shasum": ""
             },
             "type": "library",
@@ -212,10 +171,10 @@
                 }
             },
             "support": {
-                "source": "https://github.com/tokushima/tt-image/tree/0.1.5",
+                "source": "https://github.com/tokushima/tt-image/tree/0.1.9",
                 "issues": "https://github.com/tokushima/tt-image/issues"
             },
-            "time": "2022-03-03T05:49:12+00:00"
+            "time": "2022-12-23T19:02:49+00:00"
         }
     ],
     "packages-dev": [],

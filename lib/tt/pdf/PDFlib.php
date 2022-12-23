@@ -10,6 +10,7 @@ namespace tt\pdf;
  */
 class PDFlib{
 	static private int $pvf_keys = 0;
+	static private string $license = '';
 	
 	private \PDFlib $pdf;
 	private int $pages = 0;
@@ -20,10 +21,9 @@ class PDFlib{
 	
 	public function __construct(string $filename, ?float $pdf_version=null){
 		$this->pdf = new \PDFlib();
-		$license = $license ?? \ebi\Conf::get('license');
 		
-		if(!empty($license)){
-			$this->pdf->set_option('license='.$license);
+		if(!empty(self::$license)){
+			$this->pdf->set_option('license='.self::$license);
 		}
 		$this->pdf->set_option('stringformat=utf8'); // 文字列をUTF-8で渡すことをPDFlib に知らせる
 		
@@ -32,10 +32,16 @@ class PDFlib{
 			$opt[] = 'compatibility='.$pdf_version;
 		}
 
-		\ebi\Util::mkdir(dirname($filename));
-		if($this->pdf->begin_document($filename, implode(' ',$opt)) == 0){
-			throw new \ebi\exception\AccessDeniedException($this->pdf->get_errmsg());
+		if(!is_dir(dirname($filename))){
+			mkdir(dirname($filename), 0777, true);
 		}
+		if($this->pdf->begin_document($filename, implode(' ',$opt)) == 0){
+			throw new \tt\pdf\exception\AccessDeniedException($this->pdf->get_errmsg());
+		}
+	}
+
+	public static function set_license(string $license): void{
+		self::$license = $license;
 	}
 
 	public static function font_check(string $text, string $font_family, int $font_size=8): bool{
@@ -64,7 +70,7 @@ class PDFlib{
 	 * #000000をK100とする
 	 */
 	public function K100(bool $boolean): self{
-		$this->K100 = (bool)$boolean;
+		$this->K100 = $boolean;
 		return $this;
 	}
 	

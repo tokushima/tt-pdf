@@ -9,14 +9,8 @@
 		{"type": "vcs", "url": "https://github.com/tokushima/tt-image.git"}
 	],
 	"require" : {
-		"tokushima/ebi" : ">=3.4.2",
 		"tokushima/tt-image": ">=0.1.5",
 		"tecnickcom/tcpdf": ">=6.4.4",
 		"setasign/fpdi": ">=v2.3.6"
-	},
-	"after": {
-		"dummy": [
-			"PDFlib"
-		]
 	}
 }
