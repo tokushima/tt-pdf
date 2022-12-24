@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3867d1d870d8553f731a4caf7e6a8318",
+    "content-hash": "593542de2a6278d03a6546603875f5ba",
     "packages": [
         {
             "name": "setasign/fpdi",
@@ -149,32 +149,6 @@
                 }
             ],
             "time": "2022-12-17T10:28:59+00:00"
-        },
-        {
-            "name": "tokushima/tt-image",
-            "version": "0.1.9",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/tokushima/tt-image.git",
-                "reference": "096e37a873f2b8f0e34aafbccde7144a4275ec52"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/tokushima/tt-image/zipball/096e37a873f2b8f0e34aafbccde7144a4275ec52",
-                "reference": "096e37a873f2b8f0e34aafbccde7144a4275ec52",
-                "shasum": ""
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "tt\\image\\": "lib/tt/image/"
-                }
-            },
-            "support": {
-                "source": "https://github.com/tokushima/tt-image/tree/0.1.9",
-                "issues": "https://github.com/tokushima/tt-image/issues"
-            },
-            "time": "2022-12-23T19:02:49+00:00"
         }
     ],
     "packages-dev": [],
