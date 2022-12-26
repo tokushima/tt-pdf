@@ -548,8 +548,8 @@ class PDFlib{
 		if($textflow === 0){
 			throw new \tt\pdf\exception\InvalidTextOptionException('Invalid Text Option: ('.$optlist.'), Value: '.$text);
 		}
-		[$disp_x, $disp_y, $disp_x2, $disp_y] = $this->disp($x, $y, $width, $height, $rotate);
-		$this->pdf->fit_textflow($textflow,$disp_x, $disp_y, $disp_x2,$disp_y2,$fitoptlist);
+		[$disp_x, $disp_y, $disp_x2, $disp_y2] = $this->disp($x, $y, $width, $height, $rotate);
+		$this->pdf->fit_textflow($textflow,$disp_x, $disp_y, $disp_x2, $disp_y2, $fitoptlist);
 		
 		return $this;
 	}
