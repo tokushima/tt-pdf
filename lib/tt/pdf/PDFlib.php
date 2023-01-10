@@ -32,7 +32,7 @@ class PDFlib{
 			$opt[] = 'compatibility='.$pdf_version;
 		}
 
-		if(!is_dir(dirname($filename))){
+		if(!empty($filename) && !is_dir(dirname($filename))){
 			mkdir(dirname($filename), 0777, true);
 		}
 		if($this->pdf->begin_document($filename, implode(' ',$opt)) == 0){
