@@ -32,8 +32,10 @@ class PDFlib{
 			$opt[] = 'compatibility='.$pdf_version;
 		}
 
-		if(!empty($filename) && !is_dir(dirname($filename))){
-			mkdir(dirname($filename), 0777, true);
+		if(!empty($filename)){
+			if(!is_dir(dirname($filename))){
+				mkdir(dirname($filename), 0777, true);
+			}
 		}
 		if($this->pdf->begin_document($filename, implode(' ',$opt)) == 0){
 			throw new \tt\pdf\exception\AccessDeniedException($this->pdf->get_errmsg());
@@ -297,25 +299,29 @@ class PDFlib{
 		$scale = $opt['scale'] ?? 0;
 		$page_no = $opt['page_no'] ?? 1;
 
-		$doc_id = $this->load_pdf($filepath);
-		$image = $this->pdf->open_pdi_page($doc_id,$page_no,'');
-		
-		$width_pt = $this->pdf->info_pdi_page($image,'width','');
-		$height_pt = $this->pdf->info_pdi_page($image,'height','');
-		
-		$image_opt = '';
-		if(!empty($rotate)){
-			$image_opt = sprintf('rotate=%s ',$this->rotate2world($rotate));
+		try{
+			$doc_id = $this->load_pdf($filepath);
+			$image = $this->pdf->open_pdi_page($doc_id,$page_no,'');
+			
+			$width_pt = $this->pdf->info_pdi_page($image,'width','');
+			$height_pt = $this->pdf->info_pdi_page($image,'height','');
+			
+			$image_opt = '';
+			if(!empty($rotate)){
+				$image_opt = sprintf('rotate=%s ',$this->rotate2world($rotate));
+			}
+			if(!empty($scale)){
+				$image_opt = sprintf('scale=%s ',$scale);
+				$width_pt *= $scale;
+				$height_pt *= $scale;
+			}
+			
+			[$disp_x, $disp_y] = $this->disp($x, $y, $width_pt, $height_pt, $rotate);
+			$this->pdf->fit_pdi_page($image,$disp_x,$disp_y,$image_opt);
+			$this->pdf->close_pdi_page($image);
+		}catch(\PDFlibException $e){
+			throw new \tt\pdf\exception\AccessDeniedException($filepath.' is missing page '.$page_no);
 		}
-		if(!empty($scale)){
-			$image_opt = sprintf('scale=%s ',$scale);
-			$width_pt *= $scale;
-			$height_pt *= $scale;
-		}
-		
-		[$disp_x, $disp_y] = $this->disp($x, $y, $width_pt, $height_pt, $rotate);
-		$this->pdf->fit_pdi_page($image,$disp_x,$disp_y,$image_opt);
-		$this->pdf->close_pdi_page($image);
 		
 		return $this;
 	}
