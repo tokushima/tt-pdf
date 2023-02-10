@@ -191,6 +191,9 @@ class PDFlib{
 	 *  int $dpi DPI
 	 */
 	public function add_image(float $x, float $y, string $filepath, array $opt=[]): self{
+		if(!is_file($filepath)){
+			throw new \tt\pdf\exception\AccessDeniedException($filepath.' does not exist');
+		}
 		[$x, $y] = self::mm2pt($x, $y);
 		$info = getimagesize($filepath);
 		$mime = $info['mime'] ?? null;
@@ -203,7 +206,7 @@ class PDFlib{
 		$image = $this->pdf->load_image('auto',$filepath,'');
 		
 		if($image === 0){
-			throw new \tt\pdf\exception\AccessDeniedException();
+			throw new \tt\pdf\exception\AccessDeniedException($filepath.' does not exist');
 		}
 
 		$dpi = $opt['dpi'] ?? 72;
