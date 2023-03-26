@@ -526,6 +526,7 @@ class PDFlib{
 		$align = $opt['align'] ?? 0;
 		$valign = $opt['valign'] ?? 0;
 		$rotate = $opt['rotate'] ?? $opt['rotate'] ?? 0;
+		$font_style = $opt['font_style'] ?? null; // normal, bold, italic, bolditalic
 		
 		$optlist = sprintf(
 			'embedding=true encoding=unicode '.
@@ -544,6 +545,9 @@ class PDFlib{
 			($align === 0 ? 'left' : ($align === 1 ? 'center' : 'right')),
 			implode(' ',$this->color_val($color_code))
 		);
+		if(!empty($font_style)){
+			$optlist .= 'fontstyle='.$font_style.' ';
+		}
 		
 		$fitoptlist = sprintf(
 			'firstlinedist=ascender lastlinedist=descender '.
