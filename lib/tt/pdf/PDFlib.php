@@ -214,6 +214,21 @@ class PDFlib{
 		$width = self::px2pt($image_width, $dpi);
 		$height = self::px2pt($image_height, $dpi);
 		
+		if(isset($opt['align']) && $this->current_page_size[0] - $x > $width){
+			if($opt['align'] === 1){
+				$x = $x + (($this->current_page_size[0] - ($x + $width)) / 2);
+			}else if($opt['align'] === 2){
+				$x = $x + (($this->current_page_size[0] - ($x + $width)));
+			}
+		}
+		if(isset($opt['valign']) && $this->current_page_size[1] - $y > $height){
+			if($opt['valign'] === 1){
+				$y = $y + (($this->current_page_size[1] - ($y + $height)) / 2);
+			}else if($opt['valign'] === 2){
+				$y = $y + (($this->current_page_size[1] - ($y + $height)));
+			}
+		}
+
 		$image_opt = sprintf(
 			'rotate=%s '.
 			'dpi=%s',
