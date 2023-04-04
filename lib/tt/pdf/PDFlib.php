@@ -81,7 +81,7 @@ class PDFlib{
 	}
 	
 	/**
-	 * @return [x, y]
+	 * @return [width, height] (単位はpt)
 	 */
 	public function current_page_size(): array{
 		return $this->current_page_size;
@@ -102,6 +102,8 @@ class PDFlib{
 	 */
 	public function add_ruler(): self{
 		[$w, $h] = $this->current_page_size();
+		$w = self::pt2mm($w);
+		$h = self::pt2mm($h);
 		
 		$this->add_line(0, 0, 0, 5);
 		for($mm=0;$mm<=$w;$mm+=1){
