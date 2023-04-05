@@ -509,7 +509,6 @@ class PDFlib{
 		[$disp_x, $disp_y] = $this->disp($x, $y, $diameter, $diameter, 0);
 		
 		// 左上を原点とした中心座標
-		$r = $diameter / 2;
 		$this->pdf->circle($disp_x, $disp_y + $diameter, $diameter / 2);
 		
 		$this->draw_style($style);
