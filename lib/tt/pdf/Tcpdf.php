@@ -9,8 +9,9 @@ class Tcpdf{
 	private array $current_page_size = [0,0];	
 	private bool $K100 = false;
 	private array $font_names = [];
+	private string $filename;
 	
-	public function __construct(?float $pdf_version=null){
+	public function __construct(string $filename, ?float $pdf_version=null){
 		$mb_internal_encoding = mb_internal_encoding();
 		$this->pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
 		mb_internal_encoding($mb_internal_encoding);
@@ -25,6 +26,7 @@ class Tcpdf{
 		if(!empty($pdf_version)){
 			$this->pdf->setPDFVersion($pdf_version);
 		}
+		$this->filename = $filename;
 	}
 	
 	/**
@@ -298,6 +300,7 @@ class Tcpdf{
 	
 	/**
 	 * 円
+	 * cx, cy は円の中心
 	 * 
 	 * opt:
 	 *  bool $fill true: 塗りつぶす
@@ -305,16 +308,12 @@ class Tcpdf{
 	 *  string $border_color 線の色 #FFFFFF
 	 *  float $border_width 線の太さ mm
 	 */
-	public function add_circle(float $x, float $y, float $diameter, array $opt=[]): self{
+	public function add_circle(float $cx, float $cy, float $diameter, array $opt=[]): self{
 		$style = ($opt['fill'] ?? false) ? 'F' : 'D';
 		$color = $opt['color'] ?? '#000000';
 		$color_rgb = $this->color_dec($color);
 		$border_width = $opt['border_width'] ?? null;
 		$border_rgb = $this->color_dec($opt['border_color'] ?? $color);
-		
-		$r = $diameter / 2;
-		$x = $x + $r;
-		$y = $y + $r;
 		
 		$border_style = [];
 		if($border_width !== null || $style === 'D'){
@@ -331,7 +330,7 @@ class Tcpdf{
 			'width'=>$border_width ?? 0.2,
 			'color'=>$border_rgb,
 		];
-		$this->pdf->Ellipse($x, $y, $r,'',0,0,360,$style,$border_style,$color_rgb);
+		$this->pdf->Ellipse($cx, $cy, $diameter / 2,'',0,0,360,$style,$border_style,$color_rgb);
 		
 		return $this;
 	}
@@ -428,18 +427,18 @@ class Tcpdf{
 	/**
 	 * ファイルに書き出す
 	 */
-	public function write(string $filename): void{
+	public function write(): void{
 		if($this->pages === 0){
 			throw new \tt\pdf\exception\NoPagesException();
 		}
-		if(!(substr($filename, 0, 1) === '/' || strpos($filename, '://') !== false)){
-			$filename = getcwd().'/'.$filename;
+		if(!(substr($this->filename, 0, 1) === '/' || strpos($this->filename, '://') !== false)){
+			$this->filename = getcwd().'/'.$this->filename;
 		}
-		if(!is_dir(dirname($filename))){
-			mkdir(dirname($filename), 0777, true);
+		if(!is_dir(dirname($this->filename))){
+			mkdir(dirname($this->filename), 0777, true);
 		}
 		
-		$this->pdf->Output($filename,'F');
+		$this->pdf->Output($this->filename, 'F');
 	}
 	
 	/**

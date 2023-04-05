@@ -492,6 +492,7 @@ class PDFlib{
 
 	/**
 	 * 円
+	 * cx, cy は円の中心
 	 *
 	 * opt:
 	 *  bool $fill true: 塗りつぶす
@@ -499,19 +500,17 @@ class PDFlib{
 	 *  string $border_color 線の色 #FFFFFF
 	 *  float $border_width 線の太さ mm
 	 */
-	public function add_circle(float $x, float $y, float $diameter, array $opt=[]): self{				
+	public function add_circle(float $cx, float $cy, float $diameter, array $opt=[]): self{				
 		$this->pdf->save();
 
-		[$x, $y, $diameter] = self::mm2pt($x, $y, $diameter);		
+		[$x, $y, $diameter] = self::mm2pt($cx, $cy, $diameter);		
 		$style = $this->set_style($opt);
 		
 		[$disp_x, $disp_y] = $this->disp($x, $y, $diameter, $diameter, 0);
 		
-		// 左上を原点とする
+		// 左上を原点とした中心座標
 		$r = $diameter / 2;
-		$disp_x = $disp_x + $r;
-		$disp_y = $disp_y + $r;
-		$this->pdf->circle($disp_x,$disp_y,$r);
+		$this->pdf->circle($disp_x, $disp_y + $diameter, $diameter / 2);
 		
 		$this->draw_style($style);
 		$this->pdf->restore();
