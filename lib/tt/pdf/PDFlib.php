@@ -42,6 +42,9 @@ class PDFlib{
 		}
 	}
 
+	public static function has_license(): bool{
+		return !empty(self::$license);
+	}
 	public static function set_license(string $license): void{
 		self::$license = $license;
 	}
