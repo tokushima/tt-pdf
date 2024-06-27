@@ -723,4 +723,8 @@ class PDFlib{
 		}
 		$self->write();
 	}
+
+	public static function dummy_pdf_path(): string{
+		return dirname(__FILE__).'/PDFlib/resources/dummy1px.pdf';
+	}
 }
