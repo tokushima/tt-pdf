@@ -18,6 +18,7 @@ class PDFlib{
 	private bool $K100 = false;
 	private array $load_pdf = [];
 	private bool $closed = false;
+	private array $fallback_fonts = [];
 	
 	public function __construct(string $filename, ?float $pdf_version=1.6){
 		$this->pdf = new \PDFlib();
@@ -99,6 +100,15 @@ class PDFlib{
 		
 		return $this;
 	}
+
+	/**
+	 * フォールバックフォントを追加する
+	 */
+	public function add_fallback_font(string $font_family): self{
+		$this->fallback_fonts[] = $font_family;
+		return $this;
+	}
+
 
 	/**
 	 * ルーラーの追加
@@ -565,6 +575,14 @@ class PDFlib{
 		);
 		if(!empty($font_style)){
 			$optlist .= 'fontstyle='.$font_style.' ';
+		}
+		if(!empty($this->fallback_fonts)){
+			$fallback_opt = [];
+
+			foreach($this->fallback_fonts as $font){
+				$fallback_opt[] = sprintf('{fontname=%s embedding=true encoding=unicode}', $font);
+			}
+			$optlist .= sprintf('fallbackfonts={%s} ', implode(' ', $fallback_opt));
 		}
 		
 		$fitoptlist = sprintf(
