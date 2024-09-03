@@ -11,6 +11,7 @@ namespace tt\pdf;
 class PDFlib{
 	static private int $pvf_keys = 0;
 	static private string $license = '';
+	static private array $fallback_fonts = [];
 	
 	private \PDFlib $pdf;
 	private int $pages = 0;
@@ -18,7 +19,7 @@ class PDFlib{
 	private bool $K100 = false;
 	private array $load_pdf = [];
 	private bool $closed = false;
-	private array $fallback_fonts = [];
+
 	
 	public function __construct(string $filename, ?float $pdf_version=1.6){
 		$this->pdf = new \PDFlib();
@@ -49,6 +50,14 @@ class PDFlib{
 	public static function set_license(string $license): void{
 		self::$license = $license;
 	}
+
+	/**
+	 * フォールバックフォントを登録する
+	 */
+	public static function set_fallback_font(string $font_family): void{
+		self::$fallback_fonts[] = $font_family;
+	}
+
 
 	public static function font_check(string $text, string $font_family, int $font_size=8): bool{
 		$optlist = sprintf(
@@ -100,15 +109,6 @@ class PDFlib{
 		
 		return $this;
 	}
-
-	/**
-	 * フォールバックフォントを追加する
-	 */
-	public function add_fallback_font(string $font_family): self{
-		$this->fallback_fonts[] = $font_family;
-		return $this;
-	}
-
 
 	/**
 	 * ルーラーの追加
@@ -576,10 +576,10 @@ class PDFlib{
 		if(!empty($font_style)){
 			$optlist .= 'fontstyle='.$font_style.' ';
 		}
-		if(!empty($this->fallback_fonts)){
+		if(!empty(self::$fallback_fonts)){
 			$fallback_opt = [];
 
-			foreach($this->fallback_fonts as $font){
+			foreach(self::$fallback_fonts as $font){
 				$fallback_opt[] = sprintf('{fontname=%s embedding=true encoding=unicode}', $font);
 			}
 			$optlist .= sprintf('fallbackfonts={%s} ', implode(' ', $fallback_opt));
