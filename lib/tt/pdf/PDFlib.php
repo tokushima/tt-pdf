@@ -21,7 +21,7 @@ class PDFlib{
 	private bool $closed = false;
 
 	
-	public function __construct(string $filename, ?float $pdf_version=1.6){
+	public function __construct(string $filename, ?float $pdf_version=1.7){
 		$this->pdf = new \PDFlib();
 		
 		if(!empty(self::$license)){
