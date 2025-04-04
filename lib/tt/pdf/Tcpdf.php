@@ -200,7 +200,8 @@ class Tcpdf{
 	}
 	
 	/**
-	 * PDFを追加
+	 * PDF 1.4 (PDF/X-1a) を追加
+	 * パスワード・圧縮されたPDFは利用できません
 	 * 
 	 * opt:
 	 *  integer $angle 回転角度
