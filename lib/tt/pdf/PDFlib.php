@@ -12,6 +12,7 @@ class PDFlib{
 	static private int $pvf_keys = 0;
 	static private string $license = '';
 	static private array $fallback_fonts = [];
+	static private string $image_iccprofile_path;
 	
 	private \PDFlib $pdf;
 	private int $pages = 0;
@@ -19,7 +20,7 @@ class PDFlib{
 	private bool $K100 = false;
 	private array $load_pdf = [];
 	private bool $closed = false;
-
+	private int $image_iccprofile;
 	
 	public function __construct(string $filename, ?float $pdf_version=1.7){
 		$this->pdf = new \PDFlib();
@@ -42,13 +43,32 @@ class PDFlib{
 		if($this->pdf->begin_document($filename, implode(' ',$opt)) == 0){
 			throw new \tt\pdf\exception\AccessDeniedException($this->pdf->get_errmsg());
 		}
+
+		if(!empty(self::$image_iccprofile_path)){
+			$this->image_iccprofile = $this->pdf->load_iccprofile(self::$image_iccprofile_path, '');
+			
+			if($this->image_iccprofile == 0){
+				throw new \tt\pdf\exception\AccessDeniedException(sprintf('ICC Profile Load Error: %s', self::$image_iccprofile_path));
+			}
+		}
 	}
 
 	public static function has_license(): bool{
 		return !empty(self::$license);
 	}
+
+	/**
+	 * ライセンスを登録する
+	 */
 	public static function set_license(string $license): void{
 		self::$license = $license;
+	}
+
+	/**
+	 * 画像用ICCプロファイルを登録する
+	 */
+	public static function set_image_iccprofile(string $iccprofile_path): void{
+		self::$image_iccprofile_path = $iccprofile_path;
 	}
 
 	/**
@@ -218,7 +238,7 @@ class PDFlib{
 		if($mime !== 'image/jpeg' && $mime !== 'image/png'){
 			throw new \tt\pdf\exception\ImageException('image not supported');
 		}
-		$image = $this->pdf->load_image('auto',$filepath,'');
+		$image = $this->pdf->load_image('auto', $filepath, !empty($this->image_iccprofile) ? sprintf('iccprofile=%s', $this->image_iccprofile) : '');
 		
 		if($image === 0){
 			throw new \tt\pdf\exception\AccessDeniedException($filepath.' does not exist');
