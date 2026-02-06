@@ -503,7 +503,7 @@ class Tcpdf{
 	/**
 	 * ページ毎に抽出
 	 */
-	public static function split(string $filename, int $start=1, int $end=null, ?float $pdf_version=null): \Generator{
+	public static function split(string $filename, int $start=1, ?int $end=null, ?float $pdf_version=null): \Generator{
 		$page_size = self::get_page_size($filename);
 		$num_pages = sizeof($page_size);
 		
