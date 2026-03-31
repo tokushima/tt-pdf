@@ -33,7 +33,7 @@ class Tcpdf{
 	 * #000000をK100とする
 	 */
 	public function K100(bool $boolean): self{
-		$this->K100 = (boolean)$boolean;
+		$this->K100 = $boolean;
 		return $this;
 	}
 	
@@ -137,9 +137,9 @@ class Tcpdf{
 	}
 	
 	private function rotate(float $x, float $y, array $opt): void{
-		if(($angle = $opt['rotate'] ?? 0) !== 0){
+		if(($rotate = $opt['rotate'] ?? 0) !== 0){
 			$this->pdf->StartTransform();
-			$this->pdf->Rotate(360 - $angle,$x,$y); // 右回転として計算
+			$this->pdf->Rotate(360 - $rotate,$x,$y); // 右回転として計算
 		}
 	}
 	
@@ -151,6 +151,9 @@ class Tcpdf{
 	 *  int $dpi DPI
 	 */
 	public function add_image(float $x, float $y, string $filepath, array $opt=[]): self{
+		if(!is_file($filepath)){
+			throw new \tt\pdf\exception\AccessDeniedException($filepath.' does not exist');
+		}
 		$info = getimagesize($filepath);
 		$mime = $info['mime'] ?? null;
 		$image_width = $info[0];
@@ -162,8 +165,8 @@ class Tcpdf{
 		$this->rotate($x, $y, $opt);
 		
 		$dpi = $opt['dpi'] ?? 72;
-		$width = ($image_width / $dpi * 25.4);
-		$height = ($image_height / $dpi * 25.4);
+		$width = Unit::px2mm($image_width, $dpi);
+		$height = Unit::px2mm($image_height, $dpi);
 		
 		$this->pdf->Image($filepath,$x,$y,$width,$height);
 		$this->pdf->StopTransform();
@@ -326,11 +329,6 @@ class Tcpdf{
 				$style = 'FD';
 			}
 		}
-		
-		$border_style = [
-			'width'=>$border_width ?? 0.2,
-			'color'=>$border_rgb,
-		];
 		$this->pdf->Ellipse($cx, $cy, $diameter / 2,'',0,0,360,$style,$border_style,$color_rgb);
 		
 		return $this;
@@ -340,13 +338,13 @@ class Tcpdf{
 	 * カラーモードからRGB（10進数）を返す
 	 * @return R,G,B
 	 */
-	private function color_dec(string $color_code): array{
+	private function color_dec(string|array $color_code): array{
 		if(is_array($color_code)){
 			return [
-				((float)$color_code[0] ?? 0) * 100,
-				((float)$color_code[1] ?? 0) * 100,
-				((float)$color_code[2] ?? 0) * 100,
-				((float)$color_code[3] ?? 0) * 100
+				((float)($color_code[0] ?? 0)) * 100,
+				((float)($color_code[1] ?? 0)) * 100,
+				((float)($color_code[2] ?? 0)) * 100,
+				((float)($color_code[3] ?? 0)) * 100
 			];
 		}
 		if(substr($color_code,0,1) == '#'){
@@ -514,7 +512,7 @@ class Tcpdf{
 			$end = $num_pages;
 		}
 		for($page=$start;$page<=$end;$page++){
-			$self = new static($pdf_version);
+			$self = new static('', $pdf_version);
 			
 			self::set_source($self->pdf, $filename);
 			$template_id = $self->pdf->importPage($page);

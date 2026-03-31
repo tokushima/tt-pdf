@@ -12,7 +12,7 @@ class PDFlib{
 	static private int $pvf_keys = 0;
 	static private string $license = '';
 	static private array $fallback_fonts = [];
-	static private string $image_iccprofile_path;
+	static private string $image_iccprofile_path = '';
 	
 	private \PDFlib $pdf;
 	private int $pages = 0;
@@ -20,7 +20,7 @@ class PDFlib{
 	private bool $K100 = false;
 	private array $load_pdf = [];
 	private bool $closed = false;
-	private int $image_iccprofile;
+	private int $image_iccprofile = 0;
 	
 	public function __construct(string $filename, ?float $pdf_version=1.7){
 		$this->pdf = new \PDFlib();
@@ -154,17 +154,13 @@ class PDFlib{
 	 *　PDFlibでの扱いはptなのでmmからptに計算する
 	 */
 	private static function mm2pt(...$args): array{
-		$result = [];
-		foreach($args as $mm){
-			$result[] = $mm * 2.83465;
-		}
-		return $result;
+		return Unit::mm2pt(...$args);
 	}
 	private static function px2pt(int $px, float $dpi=72): float{
-		return ($px / $dpi * 72);
+		return Unit::px2pt($px, $dpi);
 	}
 	private static function pt2mm(float $pt): float{
-		return ($pt * 0.352778);
+		return Unit::pt2mm($pt)[0];
 	}
 
 	/**
@@ -361,10 +357,10 @@ class PDFlib{
 			
 			$image_opt = '';
 			if(!empty($rotate)){
-				$image_opt = sprintf('rotate=%s ',$this->rotate2world($rotate));
+				$image_opt .= sprintf('rotate=%s ',$this->rotate2world($rotate));
 			}
 			if(!empty($scale)){
-				$image_opt = sprintf('scale=%s ',$scale);
+				$image_opt .= sprintf('scale=%s ',$scale);
 				$width_pt *= $scale;
 				$height_pt *= $scale;
 			}
@@ -630,10 +626,10 @@ class PDFlib{
 		if(is_array($color_code)){
 			return [
 				'cmyk',
-				(float)$color_code[0] ?? 0,
-				(float)$color_code[1] ?? 0,
-				(float)$color_code[2] ?? 0,
-				(float)$color_code[3] ?? 0
+				(float)($color_code[0] ?? 0),
+				(float)($color_code[1] ?? 0),
+				(float)($color_code[2] ?? 0),
+				(float)($color_code[3] ?? 0)
 			];
 		}
 		if(substr($color_code,0,1) == '#'){
