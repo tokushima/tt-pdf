@@ -440,7 +440,7 @@ class PDFlib{
 		$this->pdf->save();
 
 		if(($opt['fill'] ?? false) === false){
-			$opt['border_width'] = $opt['border_width'] ?? $border_width ?? 0.1;
+			$opt['border_width'] = $opt['border_width'] ?? 0.1;
 			$bw = $opt['border_width'];
 			[$x, $y, $width, $height] = [$x + ($bw / 2), $y + ($bw / 2), $width - $bw, $height - $bw];
 		}
@@ -573,7 +573,7 @@ class PDFlib{
 		$text_leading = $opt['text_leading'] ?? $font_size;
 		$align = $opt['align'] ?? 0;
 		$valign = $opt['valign'] ?? 0;
-		$rotate = $opt['rotate'] ?? $opt['rotate'] ?? 0;
+		$rotate = $opt['rotate'] ?? 0;
 		$font_style = $opt['font_style'] ?? null; // normal, bold, italic, bolditalic
 		
 		$optlist = sprintf(

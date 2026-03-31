@@ -137,7 +137,7 @@ class Tcpdf{
 	}
 	
 	private function rotate(float $x, float $y, array $opt): void{
-		if(($angle = $opt['angle'] ?? 0) !== 0){
+		if(($angle = $opt['rotate'] ?? 0) !== 0){
 			$this->pdf->StartTransform();
 			$this->pdf->Rotate(360 - $angle,$x,$y); // 右回転として計算
 		}
@@ -147,7 +147,7 @@ class Tcpdf{
 	 * 画像を追加
 	 * 
 	 * opt:
-	 *  int $angle 回転角度
+	 *  int $rotate 回転角度
 	 *  int $dpi DPI
 	 */
 	public function add_image(float $x, float $y, string $filepath, array $opt=[]): self{
@@ -175,11 +175,11 @@ class Tcpdf{
 	 * SVGを追加
 	 * 
 	 * opt:
-	 *  integer $angle 回転角度
+	 *  int $rotate 回転角度
 	 */
-	public function add_svg(float $x, float $y, float $width, float $height, string $filepath, array$opt=[]): self{
+	public function add_svg(float $x, float $y, float $width, float $height, string $filepath, array $opt=[]): self{
 		$this->rotate($x, $y, $opt);
-		
+
 		$this->pdf->ImageSVG($filepath,$x,$y,$width,$height);
 		
 		$this->pdf->StopTransform();
@@ -190,7 +190,7 @@ class Tcpdf{
 	/**
 	 * SVGを文字列で追加
 	 */
-	public function add_svg_string(float $x, float $y, float $width, float $height, string $svg_string, $opt=[]): self{
+	public function add_svg_string(float $x, float $y, float $width, float $height, string $svg_string, array $opt=[]): self{
 		$this->rotate($x, $y, $opt);
 		
 		$this->pdf->ImageSVG('@'.$svg_string,$x,$y,$width,$height);
@@ -204,7 +204,7 @@ class Tcpdf{
 	 * パスワード・圧縮されたPDFは利用できません
 	 * 
 	 * opt:
-	 *  integer $angle 回転角度
+	 *  int $rotate 回転角度
 	 *  float $scale 拡大率
 	 *  integer $page_no 追加するページ番号
 	 *  
@@ -240,7 +240,7 @@ class Tcpdf{
 	 *  float $border_width 線の太さ mm
 	 *  float[] $dash 点線の長さ [5,2] mm
 	 */
-	public function add_line(float $sx, float $sy, float $ex, float $ey, array$opt=[]): self{
+	public function add_line(float $sx, float $sy, float $ex, float $ey, array $opt=[]): self{
 		$border_width = $opt['border_width'] ?? 0.1;
 		$border_color = $this->color_dec($opt['border_color'] ?? ($opt['color'] ?? '#000000'));
 		$style = [
@@ -373,7 +373,7 @@ class Tcpdf{
 	 *  float $font_size フォントサイズ pt
 	 *  float $text_spacing 文字間隔 pt
 	 *  float $text_leading 行間隔 pt
-	 *  int $angle 回転角度
+	 *  int $rotate 回転角度
 	 */
 	public function add_textbox(float $x, float $y, float $width, float $height, string $text, array $opt=[]): self{
 		$this->rotate($x, $y, $opt);
