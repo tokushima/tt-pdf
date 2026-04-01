@@ -6,9 +6,6 @@ namespace tt\pdf;
  */
 class Unit{
 	// 1pt = 0.352778mm, 1mm = 2.834645pt, 1in = 25.4mm = 72pt
-	private const PT_PER_INCH = 72;
-	private const MM_PER_INCH = 25.4;
-	private const PT_PER_MM = self::PT_PER_INCH / self::MM_PER_INCH; // 2.834645...
 
 	/**
 	 * 用紙定義 [width(mm), height(mm), 日本語名]
@@ -161,7 +158,7 @@ class Unit{
 	public static function mm2pt(float ...$mm): array{
 		$result = [];
 		foreach($mm as $v){
-			$result[] = $v * self::PT_PER_MM;
+			$result[] = $v * 2.83465;
 		}
 		return $result;
 	}
@@ -172,7 +169,7 @@ class Unit{
 	public static function pt2mm(float ...$pt): array{
 		$result = [];
 		foreach($pt as $v){
-			$result[] = $v / self::PT_PER_MM;
+			$result[] = $v / 2.83465;
 		}
 		return $result;
 	}
@@ -183,7 +180,7 @@ class Unit{
 	public static function in2mm(float ...$in): array{
 		$result = [];
 		foreach($in as $v){
-			$result[] = $v * self::MM_PER_INCH;
+			$result[] = $v * 25.4;
 		}
 		return $result;
 	}
@@ -194,7 +191,7 @@ class Unit{
 	public static function mm2in(float ...$mm): array{
 		$result = [];
 		foreach($mm as $v){
-			$result[] = $v / self::MM_PER_INCH;
+			$result[] = $v / 25.4;
 		}
 		return $result;
 	}
@@ -205,7 +202,7 @@ class Unit{
 	public static function in2pt(float ...$in): array{
 		$result = [];
 		foreach($in as $v){
-			$result[] = $v * self::PT_PER_INCH;
+			$result[] = $v * 72;
 		}
 		return $result;
 	}
@@ -216,7 +213,7 @@ class Unit{
 	public static function pt2in(float ...$pt): array{
 		$result = [];
 		foreach($pt as $v){
-			$result[] = $v / self::PT_PER_INCH;
+			$result[] = $v / 72;
 		}
 		return $result;
 	}
@@ -225,28 +222,28 @@ class Unit{
 	 * px -> pt
 	 */
 	public static function px2pt(float $px, float $dpi=72): float{
-		return ($px / $dpi * self::PT_PER_INCH);
+		return ($px / $dpi * 72);
 	}
 
 	/**
 	 * pt -> px
 	 */
 	public static function pt2px(float $pt, float $dpi=72): float{
-		return ($pt / self::PT_PER_INCH * $dpi);
+		return ($pt / 72 * $dpi);
 	}
 
 	/**
 	 * px -> mm
 	 */
 	public static function px2mm(float $px, float $dpi=72): float{
-		return ($px / $dpi * self::MM_PER_INCH);
+		return ($px / $dpi * 25.4);
 	}
 
 	/**
 	 * mm -> px
 	 */
 	public static function mm2px(float $mm, float $dpi=72): float{
-		return ($mm / self::MM_PER_INCH * $dpi);
+		return ($mm / 25.4 * $dpi);
 	}
 
 	/**
