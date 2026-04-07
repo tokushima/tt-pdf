@@ -29,6 +29,21 @@ class Unit{
 		'A2_NOBI' => [466, 660, 'A2ノビ'],
 		'A1_NOBI' => [660, 917, 'A1ノビ'],
 
+		// 日本の伝統的な判型（書籍仕上がり寸法）
+		'SHINSHO'      => [103, 182, '新書判'],
+		'BUNKO'        => [105, 148, '文庫判'],
+		'SHIROKU'      => [127, 188, '四六判'],
+		'KIKU'         => [152, 218, '菊判'],
+		'AB'           => [210, 257, 'AB判'],
+		'TAROKU'       => [134, 203, '太郎判'],
+
+		// 印刷用原紙（全判）
+		'KIKU_ZEN'     => [636, 939, '菊全判'],
+		'SHIROKU_ZEN'  => [788, 1091, '四六全判'],
+		'A_HON'        => [625, 880, 'A本判'],
+		'B_HON'        => [765, 1085, 'B本判'],
+		'HATOLON'      => [900, 1200, 'ハトロン判'],
+
 		// 大判インクジェット ロール幅
 		'ROLL_17' => [431.8, 0, '17インチロール'],
 		'ROLL_24' => [610, 0, '24インチロール'],
@@ -122,12 +137,12 @@ class Unit{
 		'DVD_JACKET' => [183, 273, 'DVDジャケット'],
 
 		// インスタントカメラ（チェキ）
-		'INSTAX_MINI'         => [54, 86, 'チェキ (instax mini)'],
-		'INSTAX_SQUARE'       => [72, 86, 'チェキスクエア (instax SQUARE)'],
-		'INSTAX_WIDE'         => [108, 86, 'チェキワイド (instax WIDE)'],
-		'INSTAX_MINI_IMAGE'   => [46, 62, 'チェキ 画像領域'],
-		'INSTAX_SQUARE_IMAGE' => [62, 62, 'チェキスクエア 画像領域'],
-		'INSTAX_WIDE_IMAGE'   => [99, 62, 'チェキワイド 画像領域'],
+		'INSTAX_MINI'         => [54, 86, 'instax mini'],
+		'INSTAX_SQUARE'       => [72, 86, 'instax SQUARE'],
+		'INSTAX_WIDE'         => [108, 86, 'instax WIDE'],
+		'INSTAX_MINI_IMAGE'   => [46, 62, 'instax mini 画像領域'],
+		'INSTAX_SQUARE_IMAGE' => [62, 62, 'instax SQUARE 画像領域'],
+		'INSTAX_WIDE_IMAGE'   => [99, 62, 'instax WIDE 画像領域'],
 
 		// プリントシール（プリクラ）
 		'PURIKURA_L'    => [40, 55, 'プリクラ 大'],
