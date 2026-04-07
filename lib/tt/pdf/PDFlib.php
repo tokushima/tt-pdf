@@ -135,8 +135,7 @@ class PDFlib{
 	 */
 	public function add_ruler(): self{
 		[$w, $h] = $this->current_page_size();
-		$w = self::pt2mm($w);
-		$h = self::pt2mm($h);
+		[$w, $h] = Unit::pt2mm($w, $h);
 		
 		$this->add_line(0, 0, 0, 5);
 		for($mm=0;$mm<=$w;$mm+=1){
@@ -150,20 +149,7 @@ class PDFlib{
 		return $this;
 	}
 	
-	/**
-	 *　PDFlibでの扱いはptなのでmmからptに計算する
-	 */
-	private static function mm2pt(...$args): array{
-		return Unit::mm2pt(...$args);
-	}
-	private static function px2pt(int $px, float $dpi=72): float{
-		return Unit::px2pt($px, $dpi);
-	}
-	private static function pt2mm(float $pt): float{
-		return Unit::pt2mm($pt)[0];
-	}
-
-	/**
+/**
 	 * Defines the author of the document
 	 */	
 	public function set_author(string $author): self{
@@ -199,7 +185,7 @@ class PDFlib{
 	 * ページを追加
 	 */
 	public function add_page(float $width, float $height): self{
-		[$width, $height] = self::mm2pt($width, $height);
+		[$width, $height] = Unit::mm2pt($width, $height);
 		
 		$this->end_page();
 		$this->pdf->begin_page_ext($width, $height, '');
@@ -225,7 +211,7 @@ class PDFlib{
 		if(!is_file($filepath)){
 			throw new \tt\pdf\exception\AccessDeniedException($filepath.' does not exist');
 		}
-		[$x, $y] = self::mm2pt($x, $y);
+		[$x, $y] = Unit::mm2pt($x, $y);
 		$info = getimagesize($filepath);
 		$mime = $info['mime'] ?? null;
 		$image_width = $info[0] ?? 0;
@@ -242,8 +228,8 @@ class PDFlib{
 
 		$dpi = $opt['dpi'] ?? 72;
 		$rotate = $opt['rotate'] ?? 0;
-		$width = self::px2pt($image_width, $dpi);
-		$height = self::px2pt($image_height, $dpi);
+		$width = Unit::px2pt($image_width, $dpi);
+		$height = Unit::px2pt($image_height, $dpi);
 		
 		if(isset($opt['align']) && $this->current_page_size[0] - $x > $width){
 			if($opt['align'] === 1){
@@ -280,7 +266,7 @@ class PDFlib{
 	 *  int $rotate 回転角度
 	 */
 	public function add_svg(float $x, float $y, float $width, float $height, string $filepath, array $opt=[]): self{
-		[$x, $y, $width, $height] = self::mm2pt($x, $y, $width, $height);
+		[$x, $y, $width, $height] = Unit::mm2pt($x, $y, $width, $height);
 		
 		$image = $this->pdf->load_graphics('auto', $filepath, '');
 		
@@ -306,7 +292,7 @@ class PDFlib{
 	 * SVGを文字列で追加
 	 */
 	public function add_svg_string(float $x, float $y, float $width, float $height, string $svg_string, array $opt=[]): self{
-		[$x, $y, $width, $height] = self::mm2pt($x, $y, $width, $height);
+		[$x, $y, $width, $height] = Unit::mm2pt($x, $y, $width, $height);
 		
 		$pvf_image = 'pvf/image_'.self::$pvf_keys++;
 		$this->pdf->create_pvf($pvf_image, $svg_string, '');
@@ -342,7 +328,7 @@ class PDFlib{
 		if(!is_file($filepath)){
 			throw new \tt\pdf\exception\AccessDeniedException($filepath.' not found');
 		}
-		[$x, $y] = self::mm2pt($x, $y);
+		[$x, $y] = Unit::mm2pt($x, $y);
 		
 		$rotate = $opt['rotate'] ?? 0;
 		$scale = $opt['scale'] ?? 0;
@@ -399,11 +385,11 @@ class PDFlib{
 	 *  float[] $dash 点線の長さ [5,2] mm
 	 */
 	public function add_line(float $sx, float $sy, float $ex, float $ey, array $opt=[]): self{
-		[$sx, $sy, $ex, $ey] = self::mm2pt($sx, $sy, $ex, $ey);
+		[$sx, $sy, $ex, $ey] = Unit::mm2pt($sx, $sy, $ex, $ey);
 		
 		$border_width = $opt['border_width'] ?? null;
 		$border_color = $this->color_val($opt['border_color'] ?? ($opt['color'] ?? '#000000'));
-		[$linewidth] = self::mm2pt($border_width ?? 0.1);
+		[$linewidth] = Unit::mm2pt($border_width ?? 0.1);
 		
 		$this->pdf->save();
 		
@@ -411,7 +397,7 @@ class PDFlib{
 		$this->pdf->setlinewidth($linewidth);
 
 		if(isset($opt['dash']) && is_array($opt['dash'])){
-			$this->pdf->set_graphics_option('dasharray={'.implode(' ',self::mm2pt($opt['dash'])).'}');
+			$this->pdf->set_graphics_option('dasharray={'.implode(' ',Unit::mm2pt(...$opt['dash'])).'}');
 		}
 		
 		$this->pdf->moveto($sx,$this->current_page_size[1] - $sy);
@@ -440,7 +426,7 @@ class PDFlib{
 			$bw = $opt['border_width'];
 			[$x, $y, $width, $height] = [$x + ($bw / 2), $y + ($bw / 2), $width - $bw, $height - $bw];
 		}
-		[$x, $y, $width, $height] = self::mm2pt($x, $y, $width, $height);
+		[$x, $y, $width, $height] = Unit::mm2pt($x, $y, $width, $height);
 		
 		$style = $this->set_style($opt);
 		
@@ -466,7 +452,7 @@ class PDFlib{
 			$this->pdf->set_gstate($gstate);
 		}
 		if($border_width !== null || $style === 'D'){
-			[$linewidth] = self::mm2pt(($border_width === null) ? 0.2 : $border_width);
+			[$linewidth] = Unit::mm2pt(($border_width === null) ? 0.2 : $border_width);
 			
 			$this->pdf->setcolor('fillstroke',$border_color[0],$border_color[1],$border_color[2],$border_color[3],$border_color[4] ?? 0);
 			$this->pdf->setlinewidth($linewidth);
@@ -503,7 +489,7 @@ class PDFlib{
 	public function add_triangle(float $x1, float $y1, float $x2, float $y2, float $x3, float $y3, array $opt=[]): self{		
 		$this->pdf->save();
 
-		[$x1, $y1, $x2, $y2, $x3, $y3] = self::mm2pt($x1, $y1, $x2, $y2, $x3, $y3);
+		[$x1, $y1, $x2, $y2, $x3, $y3] = Unit::mm2pt($x1, $y1, $x2, $y2, $x3, $y3);
 		
 		$style = $this->set_style($opt);
 
@@ -532,7 +518,7 @@ class PDFlib{
 	public function add_circle(float $cx, float $cy, float $diameter, array $opt=[]): self{				
 		$this->pdf->save();
 
-		[$x, $y, $diameter] = self::mm2pt($cx, $cy, $diameter);		
+		[$x, $y, $diameter] = Unit::mm2pt($cx, $cy, $diameter);		
 		$style = $this->set_style($opt);
 		
 		[$disp_x, $disp_y] = $this->disp($x, $y, $diameter, $diameter, 0);
@@ -560,7 +546,7 @@ class PDFlib{
 	 *  int $rotate 回転角度
 	 */
 	public function add_textbox(float $x, float $y, float $width, float $height, string $text, array $opt=[]): self{
-		[$x, $y, $width, $height] = self::mm2pt($x,$y,$width,$height);
+		[$x, $y, $width, $height] = Unit::mm2pt($x,$y,$width,$height);
 		
 		$font_family = $opt['font_family'] ?? 'HiraKakuProN-W3';
 		$font_size = $opt['font_size'] ?? 8;
@@ -714,10 +700,7 @@ class PDFlib{
 			$width = $self->pdf->pcos_get_number($doc_id, sprintf('pages[%d]/width', $index));
 			$height = $self->pdf->pcos_get_number($doc_id, sprintf('pages[%d]/height', $index));
 			
-			$page_size[$index + 1] = [
-				self::pt2mm($width),
-				self::pt2mm($height),
-			];
+			$page_size[$index + 1] = Unit::pt2mm($width, $height);
 		}
 		return $page_size;
 	}
@@ -751,7 +734,8 @@ class PDFlib{
 			$height_pt = $self->pdf->pcos_get_number($doc_id, sprintf('pages[%d]/height', $index));
 			$image = $self->pdf->open_pdi_page($doc_id, $page, '');
 
-			$self->add_page(self::pt2mm($width_pt), self::pt2mm($height_pt));
+			[$width_mm, $height_mm] = Unit::pt2mm($width_pt, $height_pt);
+			$self->add_page($width_mm, $height_mm);
 			$self->pdf->fit_pdi_page($image, 0, 0, '');
 			$self->pdf->close_pdi_page($image);
 		}
