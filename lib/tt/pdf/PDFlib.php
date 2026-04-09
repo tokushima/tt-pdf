@@ -261,17 +261,21 @@ class PDFlib{
 	
 	/**
 	 * SVGを追加
+	 * widthまたはheightが0の場合、SVGのviewBox/width/heightから縦横比を算出する
 	 *
 	 * opt:
 	 *  int $rotate 回転角度
 	 */
 	public function add_svg(float $x, float $y, float $width, float $height, string $filepath, array $opt=[]): self{
+		if($width <= 0 || $height <= 0){
+			[$width, $height] = $this->svg_fit_size(file_get_contents($filepath), $width, $height);
+		}
 		[$x, $y, $width, $height] = Unit::mm2pt($x, $y, $width, $height);
-		
+
 		$image = $this->pdf->load_graphics('auto', $filepath, '');
-		
+
 		$rotate = $opt['rotate'] ?? 0;
-		
+
 		$image_opt = sprintf(
 			'rotate=%s '.
 			'boxsize={%s %s} '.
@@ -280,26 +284,30 @@ class PDFlib{
 			$this->rotate2world($rotate),
 			$width,$height
 		);
-		
+
 		[$disp_x, $disp_y] = $this->disp($x, $y, $width, $height, $rotate);
 		$this->pdf->fit_graphics($image,$disp_x,$disp_y,$image_opt);
 		$this->pdf->close_graphics($image);
-		
+
 		return $this;
 	}
 
 	/**
 	 * SVGを文字列で追加
+	 * widthまたはheightが0の場合、SVGのviewBox/width/heightから縦横比を算出する
 	 */
 	public function add_svg_string(float $x, float $y, float $width, float $height, string $svg_string, array $opt=[]): self{
+		if($width <= 0 || $height <= 0){
+			[$width, $height] = $this->svg_fit_size($svg_string, $width, $height);
+		}
 		[$x, $y, $width, $height] = Unit::mm2pt($x, $y, $width, $height);
-		
+
 		$pvf_image = 'pvf/image_'.self::$pvf_keys++;
 		$this->pdf->create_pvf($pvf_image, $svg_string, '');
 		$image = $this->pdf->load_graphics('auto',$pvf_image,'');
-		
+
 		$rotate = $opt['rotate'] ?? 0;
-		
+
 		$image_opt = sprintf(
 			'rotate=%s '.
 			'boxsize={%s %s} '.
@@ -308,12 +316,45 @@ class PDFlib{
 			$this->rotate2world($rotate),
 			$width,$height
 		);
-		
+
 		[$disp_x, $disp_y] = $this->disp($x, $y, $width, $height, $rotate);
 		$this->pdf->fit_graphics($image,$disp_x,$disp_y,$image_opt);
 		$this->pdf->close_graphics($image);
-		
+
 		return $this;
+	}
+
+	/**
+	 * SVGのviewBox/width/heightから縦横比を算出し、指定されたwidth/heightに合わせて補完する
+	 * @return float[] [width, height]
+	 */
+	private function svg_fit_size(string $svg, float $width, float $height): array{
+		$ratio = null;
+
+		if(preg_match('/<svg\b[^>]*\bviewBox\s*=\s*["\']\s*[\d.\-]+\s+[\d.\-]+\s+([\d.]+)\s+([\d.]+)\s*["\']/i', $svg, $m)){
+			if((float)$m[2] > 0){
+				$ratio = (float)$m[1] / (float)$m[2];
+			}
+		}
+		if($ratio === null && preg_match('/<svg\b[^>]*\bwidth\s*=\s*["\']?([\d.]+)/i', $svg, $mw)
+			&& preg_match('/<svg\b[^>]*\bheight\s*=\s*["\']?([\d.]+)/i', $svg, $mh)){
+			if((float)$mh[1] > 0){
+				$ratio = (float)$mw[1] / (float)$mh[1];
+			}
+		}
+		if($ratio === null || $ratio <= 0){
+			throw new \tt\pdf\exception\ImageException('SVG aspect ratio could not be determined');
+		}
+
+		if($width <= 0 && $height <= 0){
+			throw new \tt\pdf\exception\ImageException('SVG width or height must be specified');
+		}
+		if($width <= 0){
+			$width = $height * $ratio;
+		}else if($height <= 0){
+			$height = $width / $ratio;
+		}
+		return [$width, $height];
 	}
 	
 	/**
