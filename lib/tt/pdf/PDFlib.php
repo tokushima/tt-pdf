@@ -452,12 +452,13 @@ class PDFlib{
 	
 	/**
 	 * 矩形
-	 * 
+	 *
 	 * opt:
 	 *  bool $fill true: 塗りつぶす
 	 *  string $color 色 #000000
 	 *  string $border_color 線の色 #FFFFFF
 	 *  float $border_width 線の太さ mm
+	 *  float[] $dash 点線の長さ [5,2] mm
 	 */
 	public function add_rect(float $x, float $y, float $width, float $height, array $opt=[]): self{
 		$this->pdf->save();
@@ -494,9 +495,13 @@ class PDFlib{
 		}
 		if($border_width !== null || $style === 'D'){
 			[$linewidth] = Unit::mm2pt(($border_width === null) ? 0.2 : $border_width);
-			
+
 			$this->pdf->setcolor('fillstroke',$border_color[0],$border_color[1],$border_color[2],$border_color[3],$border_color[4] ?? 0);
 			$this->pdf->setlinewidth($linewidth);
+
+			if(isset($opt['dash']) && is_array($opt['dash'])){
+				$this->pdf->set_graphics_option('dasharray={'.implode(' ',Unit::mm2pt(...$opt['dash'])).'}');
+			}
 			
 			if($style === 'F'){
 				$style = 'FD';
@@ -521,11 +526,13 @@ class PDFlib{
 
 	/**
 	 * 三角形
+	 *
 	 * opt:
 	 *  bool $fill true: 塗りつぶす
 	 *  string $color 色 #000000
 	 *  string $border_color 線の色 #FFFFFF
 	 *  float $border_width 線の太さ mm
+	 *  float[] $dash 点線の長さ [5,2] mm
 	 */
 	public function add_triangle(float $x1, float $y1, float $x2, float $y2, float $x3, float $y3, array $opt=[]): self{		
 		$this->pdf->save();
@@ -555,6 +562,7 @@ class PDFlib{
 	 *  string $color 色 #000000
 	 *  string $border_color 線の色 #FFFFFF
 	 *  float $border_width 線の太さ mm
+	 *  float[] $dash 点線の長さ [5,2] mm
 	 */
 	public function add_circle(float $cx, float $cy, float $diameter, array $opt=[]): self{				
 		$this->pdf->save();
